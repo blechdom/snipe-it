@@ -66,8 +66,9 @@ Route::group([ 'prefix' => 'api', 'middleware' => 'auth' ], function () {
         Route::get('list', array('as'=>'api.locations.list', 'uses'=>'LocationsController@getDatatable'));
         Route::get('{locationID}/view', array('as'=>'api.locations.view', 'uses'=>'LocationsController@getDataView'));
         Route::get('{locationID}/users', array('as'=>'api.locations.viewusers', 'uses'=>'LocationsController@getDataViewUsers'));
-        Route::get('{locationID}/assets', array('as'=>'api.locations.viewassets', 'uses'=>'LocationsController@getDataViewAssets'));
-    });
+        Route::get('{locationID}/view', array('as'=>'api.locations.viewassets', 'uses'=>'LocationsController@getDataViewAssets'));
+    Route::get('{locationID}/assets', array('as'=>'api.locations.viewfacilityassets', 'uses'=>'LocationsController@getDataViewFacilityAssets'));
+	});
 
     /*---Depreciations API---*/
     Route::group(array('prefix'=>'depreciations'), function () {
@@ -103,8 +104,11 @@ Route::group([ 'prefix' => 'api', 'middleware' => 'auth' ], function () {
     Route::group([ 'prefix' => 'licenses' ], function () {
 
         Route::get('list', [ 'as' => 'api.licenses.list', 'uses' => 'LicensesController@getDatatable' ]);
-    });
-
+    
+ Route::get('softwareList', [ 'as' => 'api.software.list', 'uses' => 'LicensesController@getSoftwareDatatable' ]);
+ Route::get('accessList', [ 'as' => 'api.access.list', 'uses' => 'LicensesController@getAccessDatatable' ]);
+ Route::get('trainingList', [ 'as' => 'api.training.list', 'uses' => 'LicensesController@getTrainingDatatable' ]);
+	});
     /*---Locations API---*/
     Route::group([ 'prefix' => 'locations' ], function () {
 
@@ -138,7 +142,8 @@ Route::group([ 'prefix' => 'api', 'middleware' => 'auth' ], function () {
     Route::group([ 'prefix' => 'categories' ], function () {
 
         Route::get('list', [ 'as' => 'api.categories.list', 'uses' => 'CategoriesController@getDatatable' ]);
-        Route::get(
+       // Route::get('accountlist', [ 'as' => 'api.categories_account.list', 'uses' => 'CategoriesController@getAccountDatatable' ]);
+	Route::get(
             '{categoryID}/asset/view',
             [ 'as' => 'api.categories.asset.view', 'uses' => 'CategoriesController@getDataViewAssets' ]
         );
@@ -814,6 +819,7 @@ Route::group([ 'prefix' => 'admin','middleware' => ['web','auth']], function () 
 */
 Route::group([ 'prefix' => 'account', 'middleware' => ['web', 'auth']], function () {
 
+	Route::get('accountlist', [ 'as' => 'api.categories_account.list', 'uses' => 'CategoriesController@getAccountDatatable' ]);
     # Profile
     Route::get('profile', [ 'as' => 'profile', 'uses' => 'ProfileController@getIndex' ]);
     Route::post('profile', 'ProfileController@postIndex');
@@ -840,12 +846,83 @@ Route::group([ 'prefix' => 'account', 'middleware' => ['web', 'auth']], function
         'request-asset/{assetId}',
         [ 'as' => 'account/request-asset', 'uses' => 'ViewAssetsController@getRequestAsset' ]
     );
+    Route::get(
+        'request-maintenance/{assetId}',
+        [ 'as' => 'account/request-maintenance', 'uses' => 'ViewAssetsController@getRequestMaintenance' ]
+    );
+   Route::get( '{assetId}/view-item', [ 'as' => 'view-item', 'uses' => 'ViewAssetsController@getViewItem' ] );
+    # Categories
+        Route::get( 'categories',
+            [ 'as' => 'categories', 'uses' => 'ViewAssetsController@getCategories' ] );
+  Route::get(
+        'facility',
+        [ 'as' => 'facility', 'uses' => 'ViewAssetsController@getFacilityIndex' ]
+    );
+   Route::get( '{assetId}/view-facility-item', [ 'as' => 'view-facility-item', 'uses' => 'ViewAssetsController@getViewFacilityItem' ] );
+    
 
-    # Account Dashboard
-    Route::get('/', [ 'as' => 'account', 'uses' => 'ViewAssetsController@getIndex' ]);
+            Route::get('{locationId}/location-view', 'ViewAssetsController@getLocationView');
+
+	# Categories
+        Route::get( 'categories',
+            [ 'as' => 'categories', 'uses' => 'ViewAssetsController@getCategories' ] );
+ 
+
+   Route::get( '{categoryID}/category-view',
+                    [ 'as' => 'category-view', 'uses' => 'ViewAssetsController@getCategoryView' ] );
+	Route::get( 'licenses',
+            [ 'as' => 'licenses', 'uses' => 'ViewAssetsController@getLicenses' ] );
+     //   Route::get( 'categories/{categoryID}',
+       //             [ 'as' => 'category-view', 'uses' => 'ViewAssetsController@getCategoryView' ] );
+        
+ Route::get(
+        'request-license/{licenseId}',
+        [ 'as' => 'account/request-license', 'uses' => 'ViewAssetsController@getRequestLicense' ]
+    );
+	Route::get(
+                '{licenseId}/license-view',
+                [ 'as' => 'view/license', 'uses' => 'ViewAssetsController@getLicenseView' ]
+           );
+	Route::get( 'training',
+            [ 'as' => 'training', 'uses' => 'ViewAssetsController@getTraining' ] );
+     //   Route::get( 'categories/{categoryID}',
+       //             [ 'as' => 'category-view', 'uses' => 'ViewAssetsController@getCategoryView' ] );
+        Route::get(
+                '{licenseId}/training-view',
+                [ 'as' => 'view/training', 'uses' => 'ViewAssetsController@getTrainingView' ]
+           );
+	Route::get( 'access',
+            [ 'as' => 'access', 'uses' => 'ViewAssetsController@getAccess' ] );
+     //   Route::get( 'categories/{categoryID}',
+       //             [ 'as' => 'category-view', 'uses' => 'ViewAssetsController@getCategoryView' ] );
+        Route::get(
+                '{licenseId}/access-view',
+                [ 'as' => 'view/access', 'uses' => 'ViewAssetsController@getAccessView' ]
+           );
+	Route::get( 'accessories',
+            [ 'as' => 'accessories', 'uses' => 'ViewAssetsController@getAccessories' ] );
+     //   Route::get( 'categories/{categoryID}',
+       //             [ 'as' => 'category-view', 'uses' => 'ViewAssetsController@getCategoryView' ] );
+	Route::get(
+        'request-accessory/{accessoryId}',
+        [ 'as' => 'account/request-accessory', 'uses' => 'ViewAssetsController@getRequestAccessory' ]
+    );
+	Route::get( 'consumables',
+            [ 'as' => 'consumables', 'uses' => 'ViewAssetsController@getConsumables' ] );
+     //   Route::get( 'categories/{categoryID}',
+       //             [ 'as' => 'category-view', 'uses' => 'ViewAssetsController@getCategoryView' ] );
+	Route::get( 'components',
+            [ 'as' => 'components', 'uses' => 'ViewAssetsController@getComponents' ] );
+     //   Route::get( 'categories/{categoryID}',
+       //             [ 'as' => 'category-view', 'uses' => 'ViewAssetsController@getCategoryView' ] );
+        Route::get(
+                '{componentId}/component-view',
+                [ 'as' => 'view/component', 'uses' => 'ViewAssetsController@getComponentView' ]
+           );
+	# Account Dashboard
+    	Route::get('/', [ 'as' => 'account', 'uses' => 'ViewAssetsController@getIndex' ]);
 
 });
-
 
 Route::group(['middleware' => ['web','auth','authorize:reports.view']], function () {
 

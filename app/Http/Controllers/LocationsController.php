@@ -419,9 +419,39 @@ class LocationsController extends Controller
         foreach ($assets as $asset) {
             $rows[] = array(
             'name' => (string)link_to(config('app.url').'/hardware/'.$asset->id.'/view', e($asset->showAssetName())),
-            'asset_tag' => e($asset->asset_tag),
+               'name_account' => (string)link_to(config('app.url').'/account/'.$asset->id.'/view-facility-item', e($asset->showAssetName())),
+		'asset_tag' => e($asset->asset_tag),
             'serial' => e($asset->serial),
             'model' => e($asset->model->name),
+            );
+        }
+
+        $data = array('total' => $assets->count(), 'rows' => $rows);
+        return $data;
+
+    }
+	
+ public function getDataViewFacilityAssets($locationID)
+    {
+        $location = Location::find($locationID)->load('assignedassets.model');
+        $assets = Asset::AssetsByLocation($location)->whereIn('status_id', [14, 17, 20]);
+
+        if (Input::has('search')) {
+            $assets = $assets->TextSearch(e(Input::get('search')));
+        }
+
+        $assets = $assets->get();
+
+        $rows = array();
+
+        foreach ($assets as $asset) {
+            $rows[] = array(
+            'name' => (string)link_to(config('app.url').'/hardware/'.$asset->id.'/view', e($asset->showAssetName())),
+               'name_account' => (string)link_to(config('app.url').'/account/'.$asset->id.'/view-facility-item', e($asset->showAssetName())),
+                'asset_tag' => e($asset->asset_tag),
+            'serial' => e($asset->serial),
+            'model' => e($asset->model->name),
+	    'request_maintenance' => '<div style=" white-space: nowrap;"><a href="' . route('account/request-maintenance', $asset->id) . '"class="btn btn-info btn-sm" title="Request Maintenance">Request Maintenance</a>',
             );
         }
 

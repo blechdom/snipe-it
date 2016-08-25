@@ -65,7 +65,11 @@ return array(
 
     'requests' => array(
         'error'   		=> 'Asset was not requested, please try again',
-        'success' 		=> 'Asset requested successfully.',
+        'success' 		=> 'Asset requested successfully. A follow-up email will be sent by the following workday.',
+    ),
+	'maintenance_requests' => array(
+        'error'                 => 'Maintenance was not requested, please try again',
+        'success'               => 'Asset Maintenance requested successfully. A follow-up email will be sent by the following workday.',
     )
 
 );

@@ -10,6 +10,7 @@ use App\Models\Component;
 use App\Models\Setting;
 use App\Models\User;
 use App\Models\License;
+use App\Models\Location;
 use Auth;
 use Config;
 use DB;
@@ -20,6 +21,7 @@ use Redirect;
 use Slack;
 use Validator;
 use View;
+use App\Models\Category;
 
 /**
  * This controller handles all actions related to the ability for users
@@ -37,7 +39,7 @@ class ViewAssetsController extends Controller
     public function getIndex()
     {
 
-        $user = User::with('assets', 'assets.model', 'consumables', 'accessories', 'licenses', 'userloc')->withTrashed()->find(Auth::user()->id);
+        $user = User::with('assets', 'nokeys', 'keys', 'assets.model', 'consumables', 'accessories', 'licenses', 'userloc')->withTrashed()->find(Auth::user()->id);
 
         $userlog = $user->userlog->load('assetlog', 'consumablelog', 'assetlog.model', 'licenselog', 'accessorylog', 'userlog', 'adminlog');
 
@@ -56,6 +58,90 @@ class ViewAssetsController extends Controller
     }
 
 
+public function getCategories()
+    {
+        // Show the page
+        $categories = Category::select(array('id', 'name', 'category_type'))
+        ->whereNull('deleted_at');
+
+        $categories = $categories->get();
+        return View::make('account/categories', compact('categories'));
+    }
+
+
+ public function getCategoryView($categoryId = null)
+    {
+        $category = Category::find($categoryId);
+
+        if (isset($category->id)) {
+                return View::make('account/category-view', compact('category'));
+        } else {
+            // Prepare the error message
+            $error = trans('admin/categories/message.does_not_exist', compact('id'));
+
+            // Redirect to the user management page
+            return redirect()->route('account/categories')->with('error', $error);
+        }
+
+}
+public function getAccessories()
+    {
+        return View::make('account/accessories');
+    }
+ public function getLicenses()
+    {
+        // Show the page
+        return View::make('account/licenses');
+    }
+ public function getTraining()
+    {
+        // Show the page
+        return View::make('account/training');
+    }
+public function getAccess()
+    {
+        // Show the page
+        return View::make('account/access');
+    }
+public function getConsumables()
+    {
+        // Show the page
+        return View::make('account/consumables');
+    }
+public function getComponents()
+{
+	return View::make('account/components');
+}
+ public function getFacilityIndex()
+    {
+
+//        $assets = Asset::with('model', 'defaultLoc', 'assetloc', 'assigneduser')->Hardware()->get();
+        return View::make('account/facility', compact('user', 'assets'));
+    }
+public function getViewFacilityItem($assetId = null) {
+
+        $asset = Asset::withTrashed()->find($assetId);
+
+        return View::make('account/view-facility-item', compact('user','asset'));
+    }
+
+public function getLocationView($locationId = null) {
+
+ 	$location = Location::find($locationId);
+
+        if (isset($location->id)) {
+                return View::make('account/location-view', compact('location'));
+        } else {
+            // Prepare the error message
+            $error = trans('admin/locations/message.does_not_exist', compact('id'));
+
+            // Redirect to the user management page
+            return redirect()->route('account/facility')->with('error', $error);
+        }
+    }
+
+
+
     public function getRequestableIndex()
     {
 
@@ -63,12 +149,17 @@ class ViewAssetsController extends Controller
 
         return View::make('account/requestable-assets', compact('user', 'assets'));
     }
+public function getViewItem($assetId = null) {
 
+        $asset = Asset::withTrashed()->find($assetId);
+
+        return View::make('account/view-item', compact('user','asset'));
+    }
 
     public function getRequestAsset($assetId = null)
     {
 
-        $user = Auth::user();
+	 $user = Auth::user();
 
         // Check if the asset exists and is requestable
         if (is_null($asset = Asset::RequestableAssets()->find($assetId))) {
@@ -131,13 +222,12 @@ class ViewAssetsController extends Controller
 
             }
 
-            return redirect()->route('requestable-assets')->with('success')->with('success', trans('admin/hardware/message.requests.success'));
-        }
+           // return redirect()->route('requestable-assets')->with('success')->with('success', trans('admin/hardware/message.requests.success'));
+       return redirect()->to('account/requestable-assets?status=Requestable')->with('success', trans('admin/hardware/message.requests.success'));
+	 }
 
 
     }
-
-
 
     // Get the acceptance screen
     public function getAcceptAsset($logID = null)
@@ -199,7 +289,6 @@ class ViewAssetsController extends Controller
             // Redirect to the asset management page
             return redirect()->to('account/view-assets')->with('error', trans('admin/users/message.error.asset_already_accepted'));
         }
-
         if (!Input::has('asset_acceptance')) {
             return redirect()->to('account/view-assets')->with('error', trans('admin/users/message.error.accept_or_decline'));
         }
@@ -244,19 +333,19 @@ class ViewAssetsController extends Controller
 
         // accessories
         } elseif ($findlog->accessory_id!='') {
-            $logaction->asset_id = null;
+            $logaction->asset_id = $findlog->accessory_id;
             $logaction->component_id = null;
             $logaction->accessory_id = $findlog->accessory_id;
             $logaction->asset_type = 'accessory';
             // accessories
         } elseif ($findlog->consumable_id!='') {
-            $logaction->asset_id = null;
+            $logaction->asset_id = $findlog->consumable_id;
             $logaction->accessory_id = null;
             $logaction->component_id = null;
             $logaction->consumable_id = $findlog->consumable_id;
             $logaction->asset_type = 'consumable';
         } elseif ($findlog->component_id!='') {
-            $logaction->asset_id = null;
+            $logaction->asset_id = $findlog->component_id;
             $logaction->accessory_id = null;
             $logaction->consumable_id = null;
             $logaction->component_id = $findlog->component_id;
@@ -285,4 +374,145 @@ class ViewAssetsController extends Controller
             return redirect()->to('account/view-assets')->with('error', 'Something went wrong ');
         }
     }
-}
+ public function getRequestLicense($licenseId = null) 
+    {
+
+        $user = Auth::user();
+
+        // Check if the license exists
+        if (is_null($license = License::find($licenseId))) {
+            // Redirect to the license management page
+            return redirect()->route('account/licenses')->with('error', trans('admin/hardware/message.does_not_exist_or_not_requestable'));
+        }
+
+
+
+ 	elseif (!Company::isCurrentUserHasAccess($license)) {
+            return redirect()->route('account/licenses')->with('error', trans('general.insufficient_permissions'));
+        } else {
+
+   	    $logaction = new Actionlog();
+            $logaction->asset_id = $data['asset_id'] = $license->id;
+            $logaction->asset_type = $data['asset_type'] = 'license';
+            $logaction->created_at = $data['requested_date'] = date("Y-m-d h:i:s");
+
+
+            if ($user->location_id) {
+                $logaction->location_id = $user->location_id;
+            }
+            $logaction->user_id = $data['user_id'] = Auth::user()->id;
+            $log = $logaction->logaction('requested');
+
+            $data['requested_by'] = $user->fullName();
+            $data['asset_name'] = $license->name;
+
+            $settings = Setting::getSettings();
+
+            if (($settings->alert_email!='')  && ($settings->alerts_enabled=='1') && (!config('app.lock_passwords'))) {
+                Mail::send('emails.asset-requested', $data, function ($m) use ($user, $settings) {
+                    $m->to(explode(',', $settings->alert_email), $settings->site_name);
+                    $m->subject('License Requested');
+                });
+            }
+
+           // return redirect()->route('requestable-assets')->with('success')->with('success', trans('admin/hardware/message.requests.success'));
+       return redirect()->to('account/licenses')->with('success', trans('admin/hardware/message.requests.success'));
+         }
+
+
+    }
+ public function getRequestAccessory($accessoryId = null)
+    {
+
+        $user = Auth::user();
+
+        // Check if the license exists
+        if (is_null($accessory = Accessory::find($accessoryId))) {
+            // Redirect to the license management page
+            return redirect()->route('account/accessories')->with('error', trans('admin/hardware/message.does_not_exist_or_not_requestable'));
+        }
+
+
+
+        elseif (!Company::isCurrentUserHasAccess($accessory)) {
+            return redirect()->route('account/accessories')->with('error', trans('general.insufficient_permissions'));
+        } else {
+
+            $logaction = new Actionlog();
+            $logaction->asset_id = $data['asset_id'] = $accessory->id;
+            $logaction->asset_type = $data['asset_type'] = 'accessory';
+            $logaction->created_at = $data['requested_date'] = date("Y-m-d h:i:s");
+
+
+            if ($user->location_id) {
+                $logaction->location_id = $user->location_id;
+            }
+            $logaction->user_id = $data['user_id'] = Auth::user()->id;
+            $log = $logaction->logaction('requested');
+
+            $data['requested_by'] = $user->fullName();
+            $data['asset_name'] = $accessory->name;
+
+            $settings = Setting::getSettings();
+
+            if (($settings->alert_email!='')  && ($settings->alerts_enabled=='1') && (!config('app.lock_passwords'))) {
+                Mail::send('emails.asset-requested', $data, function ($m) use ($user, $settings) {
+                    $m->to(explode(',', $settings->alert_email), $settings->site_name);
+                    $m->subject('Accessory Requested');
+                });
+            }
+
+           // return redirect()->route('requestable-assets')->with('success')->with('success', trans('admin/hardware/message.requests.success'));
+       return redirect()->to('account/accessories')->with('success', trans('admin/hardware/message.requests.success'));
+         }
+
+
+    }
+ public function getRequestMaintenance($assetId = null)
+    {
+
+        $user = Auth::user();
+
+        // Check if the license exists
+        if (is_null($asset = Asset::find($assetId))) {
+            // Redirect to the license management page
+            return redirect()->route('account/facility?status=Facility')->with('error', trans('admin/hardware/message.does_not_exist_or_not_requestable'));
+        }
+
+
+
+        elseif (!Company::isCurrentUserHasAccess($asset)) {
+            return redirect()->route('account/facility?status=Facility')->with('error', trans('general.insufficient_permissions'));
+        } else {
+
+            $logaction = new Actionlog();
+            $logaction->asset_id = $data['asset_id'] = $asset->id;
+            $logaction->asset_type = $data['asset_type'] = 'Maintenance Request';
+            $logaction->created_at = $data['requested_date'] = date("Y-m-d h:i:s");
+
+
+            if ($user->location_id) {
+                $logaction->location_id = $user->location_id;
+            }
+            $logaction->user_id = $data['user_id'] = Auth::user()->id;
+            $log = $logaction->logaction('maintenance requested');
+
+            $data['requested_by'] = $user->fullName();
+            $data['asset_name'] = $asset->name;
+
+            $settings = Setting::getSettings();
+
+            if (($settings->alert_email!='')  && ($settings->alerts_enabled=='1') && (!config('app.lock_passwords'))) {
+                Mail::send('emails.asset-requested', $data, function ($m) use ($user, $settings) {
+                    $m->to(explode(',', $settings->alert_email), $settings->site_name);
+                    $m->subject('Maintenance Requested');
+                });
+            }
+
+           // return redirect()->route('requestable-assets')->with('success')->with('success', trans('admin/hardware/message.requests.success'));
+       return redirect()->to('account/facility?status=Facility')->with('success', trans('admin/hardware/message.maintenance_requests.success'));
+         }
+
+
+    }
+} 

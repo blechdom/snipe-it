@@ -16,44 +16,114 @@ View Assets for  {{ $user->fullName() }}
           @if ($user->id)
             <div class="box-header with-border">
               <div class="box-heading">
-                <h3 class="box-title"> {{ trans('admin/users/general.assets_user', array('name' => $user->first_name)) }}</h3>
+                <h3 class="box-title"> Keys and Lockers assigned to {{$user->first_name }}</h3>
               </div>
             </div><!-- /.box-header -->
           @endif
 
         <div class="box-body">
           <!-- checked out assets table -->
-          @if (count($user->assets) > 0)
+          @if (count($user->keys) > 0)
             <div class="table-responsive">
               <table class="table table-striped">
                   <thead>
                       <tr>
-                          <th class="col-md-4">{{ trans('admin/hardware/table.asset_model') }}</th>
+                          <th class="col-md-3">Keys and Lockers</th>
                           <th class="col-md-2">{{ trans('admin/hardware/table.asset_tag') }}</th>
                           <th class="col-md-3">{{ trans('general.name') }}</th>
-                          <th></th>
+			  <th class="col-md-2">Image</th>
+                          <th class="col-md-2">Combo</th>
                       </tr>
                   </thead>
                   <tbody>
-                      @foreach ($user->assets as $asset)
-                      <tr>
+                      @foreach ($user->keys as $key)
+
+			<tr>
                           <td>
-                          @if ($asset->physical=='1') {{ $asset->model->name }}
+                          @if ($key->physical=='1') {{ $key->model->name }}
                           @endif
                           </td>
-                          <td>{{ $asset->asset_tag }}</td>
-                          <td>{{ $asset->name }}</td>
+                          <td>{{ $key->asset_tag }}</td>
+                          <td>{{ $key->name }}</td>
                           <td>
 
-                          @if (($asset->image) && ($asset->image!=''))
-                            <img src="{{ config('app.url') }}/uploads/assets/{{ $asset->image }}" height="50" width="50">
+                          @if (($key->image) && ($key->image!=''))
+                            <img src="{{ config('app.url') }}/uploads/assets/{{ $key->image }}" height="50">
 
-                          @elseif (($asset->model) && ($asset->model->image!=''))
-                            <img src="{{ config('app.url') }}/uploads/models/{{ $asset->model->image }}" height="50" width="50">
+                          @elseif (($key->model) && ($key->model->image!=''))
+                            <img src="{{ config('app.url') }}/uploads/models/{{ $key->model->image }}" height="50">
                           @endif
 
                          </td>
+			<td>
 
+                          @if ($key->_snipeit_locker_combo)
+                            {{ $key->_snipeit_locker_combo }}
+			@endif
+                         </td>
+                      </tr>
+                      @endforeach
+                  </tbody>
+              </table>
+            </div>
+          @else
+
+          <div class="col-md-12">
+              <div class="alert alert-info alert-block">
+                  <i class="fa fa-info-circle"></i>
+                  {{ trans('general.no_results') }}
+              </div>
+          </div>
+          @endif
+        </div>
+    </div>
+  </div>
+</div>
+ <div class="row">
+    <div class="col-md-12">
+      <div class="box box-default">
+
+          @if ($user->id)
+            <div class="box-header with-border">
+              <div class="box-heading">
+                <h3 class="box-title"> Assets assigned to {{ $user->first_name }}</h3>
+              </div>
+            </div><!-- /.box-header -->
+          @endif
+
+        <div class="box-body">
+          <!-- checked out assets table -->
+          @if (count($user->nokeys) > 0)
+            <div class="table-responsive">
+              <table class="table table-striped">
+                  <thead>
+                      <tr>
+                          <th class="col-md-3">Asset</th>
+                          <th class="col-md-2">{{ trans('admin/hardware/table.asset_tag') }}</th>
+                          <th class="col-md-3">{{ trans('general.name') }}</th>
+                          <th class="col-md-2">Image</th>
+                      </tr>
+                  </thead>
+                  <tbody>
+                      @foreach ($user->nokeys as $nokey)
+
+                        <tr>
+                          <td>
+                          @if ($nokey->physical=='1') {{ $nokey->model->name }}
+                          @endif
+                          </td>
+                          <td><a href="/account/{{ $nokey->id }}/view-item">{{ $nokey->asset_tag }}</a></td>
+                          <td><a href="/account/{{ $nokey->id }}/view-item">{{ $nokey->name }}</a></td>
+                          <td>
+
+                          @if (($nokey->image) && ($nokey->image!=''))
+                            <img src="{{ config('app.url') }}/uploads/assets/{{ $nokey->image }}" height="50">
+
+                          @elseif (($nokey->model) && ($nokey->model->image!=''))
+                            <img src="{{ config('app.url') }}/uploads/models/{{ $nokey->model->image }}" height="50">
+                          @endif
+
+                         </td>
                       </tr>
                       @endforeach
                   </tbody>

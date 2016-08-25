@@ -196,8 +196,8 @@
 
                       <!-- Purchase Order -->
                       <div class="form-group {{ $errors->has('purchase_order') ? ' has-error' : '' }}">
-                          <label for="purchase_order" class="col-md-3 control-label">{{ trans('admin/licenses/form.purchase_order') }}</label>
-                              <div class="col-md-3">
+                          <label for="purchase_order" class="col-md-3 control-label">Safety & Training Docs Link</label>
+                              <div class="col-md-7">
                                   <input class="form-control" type="text" name="purchase_order" id="purchase_order" value="{{ Input::old('purchase_order', $license->purchase_order) }}" />
                                   {!! $errors->first('purchase_order', '<span class="alert-msg"><i class="fa fa-times"></i> :message</span>') !!}
                               </div>

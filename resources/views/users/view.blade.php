@@ -58,7 +58,8 @@
               @if ($user->avatar)
                 <img src="/uploads/avatars/{{ $user->avatar }}" class="avatar img-thumbnail hidden-print">
               @else
-                <img src="{{ $user->gravatar() }}" class="avatar img-circle hidden-print">
+               <!-- <img src="{{ $user->gravatar() }}" class="avatar img-circle hidden-print"> -->
+		<img src="/uploads/avatars/avatar.jpg" class="avatar img-thumbnail hidden-print">
               @endif
             </div>
             <div class="col-md-8">

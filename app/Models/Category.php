@@ -5,7 +5,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Watson\Validating\ValidatingTrait;
 use App\Http\Traits\UniqueUndeletedTrait;
-
+use App\Models\Statuslabel;
 /**
  * Model for Categories. Categories are a higher-level group
  * than Asset Models, and handle things like whether or not
@@ -54,7 +54,21 @@ class Category extends Model
     {
         return $this->hasMany('\App\Models\AssetModel', 'category_id')->count();
     }
-
+	
+    public function requestableassetscount()
+    {
+	 return $this->hasManyThrough('\App\Models\Asset', '\App\Models\AssetModel', 'category_id', 'model_id')
+        ->where( 'requestable', '=', '1')
+        ->count();
+    }
+	public function accessoriescount()
+    {
+        return $this->hasMany('\App\Models\Accessory')->count();
+    }
+    public function consumablescount()
+    {
+        return $this->hasMany('\App\Models\Consumable')->count();
+}
     public function accessories()
     {
         return $this->hasMany('\App\Models\Accessory');
@@ -74,7 +88,7 @@ class Category extends Model
     {
         switch ($this->category_type) {
             case 'asset':
-                return $this->assets->count();
+		return $this->assets->count();
             case 'accessory':
                 return $this->accessories->count();
             case 'component':
@@ -87,9 +101,11 @@ class Category extends Model
 
     public function assets()
     {
-        return $this->hasManyThrough('\App\Models\Asset', '\App\Models\AssetModel', 'category_id', 'model_id');
-    }
-
+        $assets = $this->hasManyThrough('\App\Models\Asset', '\App\Models\AssetModel', 'category_id', 'model_id');	
+	$assets = $assets->where ('requestable', '=', '1')
+			->whereIn ('status_id', [2, 18, 19]);
+	return $assets;
+   }
     public function models()
     {
         return $this->hasMany('\App\Models\AssetModel', 'category_id');

@@ -401,12 +401,12 @@ a:focus {
 }
 @media (max-width: 991px) {
   .content-header {
-    padding-top: 110px;
+   // padding-top: 110px;
   }
 }
 @media (max-width: 991px) {
   ul.sidebar-menu {
-    padding-top: 120px;
+   // padding-top: 120px;
   }
 }
 @media (max-width: 991px) {

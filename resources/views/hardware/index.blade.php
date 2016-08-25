@@ -17,12 +17,15 @@
             {{ trans('general.archived') }}
          @elseif (Input::get('status')=='Deleted')
             {{ trans('general.deleted') }}
+	@elseif (Input::get('status')=='Key')
+            Keys and Lockers
         @endif
     @else
             {{ trans('general.all') }}
     @endif
-
-    {{ trans('general.assets') }}
+    @if (Input::get('status')=='Key')
+    @else {{ trans('general.assets') }}
+    @endif
 @stop
 
 {{-- Page title --}}
@@ -76,30 +79,30 @@
                             @endif
                             <th data-sortable="true" data-field="id" data-visible="false">{{ trans('general.id') }}</th>
                             <th data-field="companyName" data-searchable="true" data-sortable="true" data-switchable="true" data-visible="false">{{ trans('general.company') }}</th>
-                            <th data-sortable="true" data-field="image" data-visible="false">{{ trans('admin/hardware/table.image') }}</th>
-                            <th data-sortable="true" data-field="name" data-visible="false">{{ trans('admin/hardware/form.name') }}</th>
-                            <th data-sortable="true" data-field="asset_tag">{{ trans('admin/hardware/table.asset_tag') }}</th>
-                            <th data-sortable="true" data-field="serial">{{ trans('admin/hardware/table.serial') }}</th>
-                            <th data-sortable="true" data-field="model">{{ trans('admin/hardware/form.model') }}</th>
+                            <th data-sortable="true" data-field="image" data-visible="true">{{ trans('admin/hardware/table.image') }}</th>
+                            <th data-sortable="true" data-field="name" data-visible="true">{{ trans('admin/hardware/form.name') }}</th>
+                            <th data-sortable="true" data-field="asset_tag" data-visible="true">{{ trans('admin/hardware/table.asset_tag') }}</th>
+                            <th data-sortable="true" data-field="serial" data-visible="false">{{ trans('admin/hardware/table.serial') }}</th>
+                            <th data-sortable="true" data-field="model" data-visible="false">{{ trans('admin/hardware/form.model') }}</th>
                             <th data-sortable="true" data-field="model_number" data-visible="false">{{ trans('admin/models/table.modelnumber') }}</th>
-                            <th data-sortable="true" data-field="status_label">{{ trans('admin/hardware/table.status') }}</th>
-                            <th data-sortable="true" data-field="assigned_to">{{ trans('admin/hardware/form.checkedout_to') }}</th>
-                            <th data-sortable="true" data-field="location" data-searchable="true">{{ trans('admin/hardware/table.location') }}</th>
-                            <th data-sortable="true" data-field="category" data-searchable="true">{{ trans('general.category') }}</th>
-                            <th data-sortable="true" data-field="manufacturer" data-searchable="true" data-visible="false">{{ trans('general.manufacturer') }}</th>
+                            <th data-sortable="true" data-field="status_label" data-visible="true">{{ trans('admin/hardware/table.status') }}</th>
+                            <th data-sortable="true" data-field="assigned_to" data-visible="true">{{ trans('admin/hardware/form.checkedout_to') }}</th>
+                            <th data-sortable="true" data-field="location" data-searchable="true" data-visible="false">{{ trans('admin/hardware/table.location') }}</th>
+                            <th data-sortable="true" data-field="category" data-searchable="true" data-visible="false">{{ trans('general.category') }}</th>
+                            <th data-sortable="true" data-field="manufacturer" data-searchable="true" data-visible="false" data-visible="true">{{ trans('general.manufacturer') }}</th>
                             <th data-sortable="true" data-field="purchase_cost" data-searchable="true" data-visible="false">{{ trans('admin/hardware/form.cost') }}</th>
                             <th data-sortable="true" data-field="purchase_date" data-searchable="true" data-visible="false">{{ trans('admin/hardware/form.date') }}</th>
-                            <th data-sortable="false" data-field="eol" data-searchable="true">{{ trans('general.eol') }}</th>
-                            <th data-sortable="true" data-searchable="true" data-field="notes">{{ trans('general.notes') }}</th>
-                            <th data-sortable="true" data-searchable="true"  data-field="order_number">{{ trans('admin/hardware/form.order') }}</th>
-                            <th data-sortable="true" data-searchable="true" data-field="last_checkout">{{ trans('admin/hardware/table.checkout_date') }}</th>
-                            <th data-sortable="true" data-field="expected_checkin" data-searchable="true">{{ trans('admin/hardware/form.expected_checkin') }}</th>
+                            <th data-sortable="false" data-field="eol" data-searchable="true" data-visible="false">{{ trans('general.eol') }}</th>
+                            <th data-sortable="true" data-searchable="true" data-field="notes" data-visible="true">{{ trans('general.notes') }}</th>
+                            <th data-sortable="true" data-searchable="true"  data-field="order_number" data-visible="false">{{ trans('admin/hardware/form.order') }}</th>
+                            <th data-sortable="true" data-searchable="true" data-field="last_checkout" data-visible="false">{{ trans('admin/hardware/table.checkout_date') }}</th>
+                            <th data-sortable="true" data-field="expected_checkin" data-searchable="true" data-visible="false">{{ trans('admin/hardware/form.expected_checkin') }}</th>
                             @foreach(\App\Models\CustomField::all() AS $field)
-                              <th data-sortable="true" data-visible="false" data-field="{{$field->db_column_name()}}">{{$field->name}}</th>
+                              <th data-sortable="true" data-visible="false" data-field="{{$field->db_column_name()}}" data-visible="false">{{$field->name}}</th>
                             @endforeach
-                            <th data-switchable="false" data-searchable="false" data-sortable="false" data-field="change">{{ trans('admin/hardware/table.change') }}</th>
+                            <th data-switchable="false" data-searchable="false" data-sortable="false" data-field="change" data-visible="true">{{ trans('admin/hardware/table.change') }}</th>
                             <th data-sortable="true" data-field="created_at" data-searchable="true" data-visible="false">{{ trans('general.created_at') }}</th>
-                            <th data-switchable="false" data-searchable="false" data-sortable="false" data-field="actions" >{{ trans('table.actions') }}</th>
+                            <th data-switchable="false" data-searchable="false" data-sortable="false" data-field="actions" data-visible="true">{{ trans('table.actions') }}</th>
                         </tr>
                     </thead>
                     {{-- <tfoot>

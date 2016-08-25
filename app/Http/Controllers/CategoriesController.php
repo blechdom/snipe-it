@@ -278,7 +278,7 @@ class CategoriesController extends Controller
         $rows = array();
 
         foreach ($categories as $category) {
-
+	  if ($category->itemCount() != 0) {
             $actions = '<a href="'.route('update/category', $category->id).'" class="btn btn-warning btn-sm" style="margin-right:5px;">';
             $actions .='<i class="fa fa-pencil icon-white"></i></a>';
             $actions .='<a data-html="false" class="btn delete-asset btn-danger btn-sm';
@@ -289,7 +289,8 @@ class CategoriesController extends Controller
             $rows[] = array(
                 'id'      => $category->id,
                 'name'  => (string)link_to('/admin/settings/categories/'.$category->id.'/view', $category->name) ,
-                'category_type' => ucwords($category->category_type),
+                'name_account' => (string)link_to('account/'.$category->id.'/category-view', $category->name) ,
+		'category_type' => ucwords($category->category_type),
                 'count'         => $category->itemCount(),
                 'acceptance'    => ($category->require_acceptance=='1') ? '<i class="fa fa-check"></i>' : '',
                 //EULA is still not working correctly
@@ -297,12 +298,71 @@ class CategoriesController extends Controller
                 'actions'       => $actions
             );
         }
-
+}
         $data = array('total' => $catCount, 'rows' => $rows);
 
         return $data;
     }
 
+ public function getAccountDatatable()
+    {
+        // Grab all the categories
+        $categories = Category::with('assets', 'accessories')->whereIn('category_type', ['asset', 'accessory']);
+
+        if (Input::has('search')) {
+            $categories = $categories->TextSearch(e(Input::get('search')));
+        }
+
+        if (Input::has('offset')) {
+            $offset = e(Input::get('offset'));
+        } else {
+            $offset = 0;
+        }
+
+        if (Input::has('limit')) {
+            $limit = e(Input::get('limit'));
+        } else {
+            $limit = 50;
+        }
+
+
+        $allowed_columns = ['id','name','category_type'];
+        $order = Input::get('order') === 'asc' ? 'asc' : 'desc';
+        $sort = in_array(Input::get('sort'), $allowed_columns) ? e(Input::get('sort')) : 'created_at';
+
+        $categories = $categories->orderBy($sort, $order);
+
+        $catCount = $categories->count();
+        $categories = $categories->skip($offset)->take($limit)->get();
+
+        $rows = array();
+
+        foreach ($categories as $category) {
+          if ($category->itemCount() != 0) {
+            $actions = '<a href="'.route('update/category', $category->id).'" class="btn btn-warning btn-sm" style="margin-right:5px;">';
+            $actions .='<i class="fa fa-pencil icon-white"></i></a>';
+            $actions .='<a data-html="false" class="btn delete-asset btn-danger btn-sm';
+            if ($category->itemCount() > 0) {
+                $actions .=' disabled';
+            }
+            $actions .=' data-toggle="modal" href="'.route('delete/category', $category->id).'" data-content="'.trans('admin/categories/message.delete.confirm').'" data-title="'.trans('general.delete').' '.htmlspecialchars($category->name).'?" onClick="return false;"><i class="fa fa-trash icon-white"></i></a>';
+            $rows[] = array(
+                'id'      => $category->id,
+                'name'  => (string)link_to('/admin/settings/categories/'.$category->id.'/view', $category->name) ,
+                'name_account' => (string)link_to('account/'.$category->id.'/category-view', $category->name) ,
+                'category_type' => ucwords($category->category_type),
+		 'count'         => $category->itemCount(),
+                'acceptance'    => ($category->require_acceptance=='1') ? '<i class="fa fa-check"></i>' : '',
+                //EULA is still not working correctly
+                'eula'          => ($category->getEula()) ? '<i class="fa fa-check"></i>' : '',
+                'actions'       => $actions
+            );
+        }
+}
+        $data = array('total' => $catCount, 'rows' => $rows);
+
+        return $data;
+}
     public function getDataViewAssets($categoryID)
     {
 
@@ -329,16 +389,17 @@ class CategoriesController extends Controller
 
         $allowed_columns = ['id','name','serial','asset_tag'];
         $sort = in_array(Input::get('sort'), $allowed_columns) ? Input::get('sort') : 'created_at';
-        $count = $category_assets->count();
-        $category_assets = $category_assets->skip($offset)->take($limit)->get();
+        
+	$count = $category_assets->count();
+	$category_assets = $category_assets->skip($offset)->take($limit)->get();
         $rows = array();
 
         foreach ($category_assets as $asset) {
 
             $actions = '';
             $inout='';
-
-            if ($asset->deleted_at=='') {
+	
+		if ($asset->deleted_at=='') {
                 $actions = '<div style=" white-space: nowrap;"><a href="'.route('clone/hardware', $asset->id).'" class="btn btn-info btn-sm" title="Clone asset"><i class="fa fa-files-o"></i></a> <a href="'.route('update/hardware', $asset->id).'" class="btn btn-warning btn-sm"><i class="fa fa-pencil icon-white"></i></a> <a data-html="false" class="btn delete-asset btn-danger btn-sm" data-toggle="modal" href="'.route('delete/hardware', $asset->id).'" data-content="'.trans('admin/hardware/message.delete.confirm').'" data-title="'.trans('general.delete').' '.htmlspecialchars($asset->asset_tag).'?" onClick="return false;"><i class="fa fa-trash icon-white"></i></a></div>';
             } elseif ($asset->deleted_at!='') {
                 $actions = '<a href="'.route('restore/hardware', $asset->id).'" class="btn btn-warning btn-sm"><i class="fa fa-recycle icon-white"></i></a>';
@@ -356,19 +417,28 @@ class CategoriesController extends Controller
 
             $rows[] = array(
                 'id' => $asset->id,
+		'image' => (($asset->image) && ($asset->image!='')) ? '<img src="'.config('app.url').'/uploads/assets/'.$asset->image.'" height=50>' : ((($asset->model) && ($asset->model->image!='')) ? '<img src="'.config('app.url').'/uploads/models/'.$asset->model->image.'" height=50>' : ''),
                 'name' => (string)link_to('/hardware/'.$asset->id.'/view', $asset->showAssetName()),
-                'model' => $asset->model->name,
+		'name_account'  => '<a title="'.e($asset->name).'" href="/account/'.$asset->id.'/view-item">'.e($asset->name).'</a>',
+                'name_nolink' => $asset->name,
+		'model' => $asset->model->name,
+		'manufacturer_nolink' => $asset->model->manufacturer->name,
                 'asset_tag' => $asset->asset_tag,
-                'serial' => $asset->serial,
+                'asset_tag_account'     => '<a title="'.e($asset->asset_tag).'" href="/account/'.$asset->id.'/view-item">'.e($asset->asset_tag).'</a>',
+		'serial' => $asset->serial,
                 'assigned_to' => ($asset->assigneduser) ? (string)link_to('/admin/users/'.$asset->assigneduser->id.'/view', $asset->assigneduser->fullName()): '',
-                'change' => $inout,
+                'status_label'        => ($asset->assigneduser) ? 'Checked Out' : ((e($asset->assetstatus)) ? e($asset->assetstatus->name) : ''),
+		'change' => $inout,
                 'actions' => $actions,
+		 'request_action' => '<div style=" white-space: nowrap;"><a href="' . route('account/request-asset', $asset->id) . '"class="btn btn-info btn-sm" title="Request">Request</a>',
                 'companyName' => Company::getName($asset),
             );
         }
 
+
         $data = array('total' => $count, 'rows' => $rows);
         return $data;
+
     }
 
 
@@ -417,7 +487,10 @@ class CategoriesController extends Controller
             $rows[] = array(
                 'id' => $asset->id,
                 'name' => (string)link_to_route('view/accessory', $asset->name, [$asset->id]),
-                'actions' => $actions,
+		'name_nolink' => $asset->name,
+                'qty'           => e($asset->qty),
+		'numRemaining'  => $asset->numRemaining(),
+		'actions' => $actions,
                 'companyName' => Company::getName($asset),
             );
         }
@@ -471,7 +544,12 @@ class CategoriesController extends Controller
             $rows[] = array(
                 'id' => $asset->id,
                 'name' => (string) link_to_route('view/consumable', $asset->name, [$asset->id]),
-                'actions' => $actions,
+                'name_nolink' => $asset->name,
+		'manufacturer_nolink' => $asset->manufacturer,
+		'model' => $asset->model_no,
+		'qty_consumable' =>  e($asset->qty),
+		'numRemaining' => $asset->numRemaining(),
+		'actions' => $actions,
                 'companyName' => Company::getName($asset),
             );
         }

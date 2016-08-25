@@ -611,8 +611,10 @@ class AccessoriesController extends Controller
 
             $rows[] = array(
             'name'          => '<a href="'.url('admin/accessories/'.$accessory->id).'/view">'. $accessory->name.'</a>',
-            'category'      => ($accessory->category) ? (string)link_to('admin/settings/categories/'.$accessory->category->id.'/view', $accessory->category->name) : '',
-            'qty'           => e($accessory->qty),
+            'category'      => ($accessory->category) ? (string)link_to('admin/categories/'.$accessory->category->id.'/view', $accessory->category->name) : '',
+            'name_account'   => $accessory->name,
+            'category_account'      => ($accessory->category) ? (string)link_to('/account/'.$accessory->category->id.'/category-view', $accessory->category->name) : '',
+		'qty'           => e($accessory->qty),
             'order_number'  => e($accessory->order_number),
             'min_amt'  => e($accessory->min_amt),
             'location'      => ($accessory->location) ? e($accessory->location->name): '',
@@ -620,7 +622,8 @@ class AccessoriesController extends Controller
             'purchase_cost' => number_format($accessory->purchase_cost, 2),
             'numRemaining'  => $accessory->numRemaining(),
             'actions'       => $actions,
-            'companyName'   => is_null($company) ? '' : e($company->name)
+	    'request_action' => '<div style=" white-space: nowrap;"><a href="' . route('account/request-accessory', $accessory->id) . '"class="btn btn-info btn-sm" title="Request">Request</a>',
+	    'companyName'   => is_null($company) ? '' : e($company->name)
             );
         }
 

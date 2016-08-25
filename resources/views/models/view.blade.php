@@ -93,19 +93,17 @@
       {{ trans('general.months') }}</li>
       @endif
 
-      @if ($model->image)
-      <li><br /><img src="{{ config('app.url') }}/uploads/models/{{ $model->image }}" /></li>
-      @endif
-
       @if  ($model->deleted_at!='')
          <li><br /><a href="{{ route('restore/model', $model->id) }}" class="btn-flat large info ">{{ trans('admin/models/general.restore') }}</a></li>
 
   	@endif
 
     </ul>
-
+@if ($model->image)
+      <img src="{{ config('app.url') }}/uploads/models/{{ $model->image }}" width=100% />
+      @endif
     @if ($model->note)
-    Notesd:
+    Notes:
     <p>{!! $model->getNote() !!}
     </p>
     @endif

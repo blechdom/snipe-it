@@ -595,6 +595,11 @@ public function checkin_email()
                              ->where('archived', '=', 0);
                    });
     }
+	  public function scopeKey($query)
+    {
+
+        return $query->whereIn('status_id',[11, 12, 13]);
+    }
 
   /**
    * Query builder scope for Undeployable assets
@@ -667,7 +672,11 @@ public function checkin_email()
                  ->where('archived', '=', 0);
         });
     }
+ public function scopeFacility($query)
+    {
 
+        return $query->whereIn('status_id', [14, 17, 20] );
+    }
 
   /**
   * Query builder scope for Deleted assets

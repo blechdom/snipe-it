@@ -329,12 +329,14 @@ class ReportsController extends Controller
     public function getActivityReport()
     {
         $log_actions = Actionlog::orderBy('created_at', 'DESC')
-                                ->with('adminlog')
-                                ->with('accessorylog')
-                                ->with('assetlog')
-                                ->with('licenselog')
-                                ->with('userlog')
-                                ->orderBy('created_at', 'DESC')
+			->with('accessorylog', 'consumablelog', 'licenselog', 'assetlog', 'adminlog', 'userlog', 'componentlog')
+                	//->take(1850)       
+		//         ->with('adminlog')
+                       //         ->with('accessorylog')
+                       //          ->with('assetlog')
+                       //          ->with('licenselog')
+                       //         ->with('userlog')
+                       //         ->orderBy('created_at', 'DESC')
                                 ->get();
 
         return View::make('reports/activity', compact('log_actions'));

@@ -267,10 +267,10 @@
           <div class="col-md-4">
 
               @if ($asset->image)
-                  <img src="{{ Config::get('app.url') }}/uploads/assets/{{{ $asset->image }}}" class="assetimg">
+                  <img src="{{ Config::get('app.url') }}/uploads/assets/{{{ $asset->image }}}" class="assetimg" width=100%>
               @else
                   @if ($asset->model->image!='')
-                      <img src="{{ Config::get('app.url') }}/uploads/models/{{{ $asset->model->image }}}" class="assetimg">
+                      <img src="{{ Config::get('app.url') }}/uploads/models/{{{ $asset->model->image }}}" class="assetimg" width=100%>
                   @endif
               @endif
 

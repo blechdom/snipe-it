@@ -22,6 +22,8 @@
   <div class="row">
     <div class="col-md-8 col-md-offset-2">
 
+
+
       {{ Form::open(['method' => 'POST', 'files' => true, 'class' => 'form-horizontal' ]) }}
       <!-- CSRF Token -->
       <input type="hidden" name="_token" value="{{ csrf_token() }}" />
@@ -139,7 +141,8 @@
                 <div class="form-group {{ $errors->has('image') ? 'has-error' : '' }}">
                     <label class="col-md-3 control-label" for="image">{{ trans('general.image_upload') }}</label>
                     <div class="col-md-5">
-                        {{ Form::file('image') }}
+                       <!-- {{ Form::file('image') }} -->
+			 <input type="file" id="file-upload" accept="image/*" name="image">
                         {!! $errors->first('image', '<span class="alert-msg"><br>:message</span>') !!}
                     </div>
                 </div>
@@ -155,4 +158,6 @@
 
 </form>
 </div>
+
+
 @stop

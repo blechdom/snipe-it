@@ -150,7 +150,7 @@ class User extends Model implements AuthenticatableContract, CanResetPasswordCon
             // Generate the Gravatar hash
             $gravatar = md5(strtolower(trim($this->email)));
             // Return the Gravatar url
-            return "//gravatar.com/avatar/".$gravatar;
+            return "/uploads/avatars/avatar.jpg";
         }
 
         return false;
@@ -165,6 +165,19 @@ class User extends Model implements AuthenticatableContract, CanResetPasswordCon
         return $this->hasMany('\App\Models\Asset', 'assigned_to')->withTrashed();
     }
 
+   public function nokeys()
+    {
+        $assets = $this->hasMany('\App\Models\Asset', 'assigned_to')->withTrashed();
+	$assets = $assets->where('status_id', '!=', '11')->where('status_id', '!=', '12');
+	return $assets;
+    
+    }
+    public function keys()
+    {
+    	$assets = $this->hasMany('\App\Models\Asset', 'assigned_to')->withTrashed();
+        $assets = $assets->whereIn('status_id', [11,12]);
+        return $assets;
+	}
     /**
      * Get assets assigned to this user
      */

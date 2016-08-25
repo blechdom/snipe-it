@@ -118,23 +118,42 @@
           <!-- Navbar Right Menu -->
             <div class="navbar-custom-menu">
               <ul class="nav navbar-nav">
-                          @can('assets.view')
+                @can('admin')
+		@else   
+		       @can('assets.view')
+				@can('admin')
                               <li {!! (Request::is('hardware*') ? ' class="active"' : '') !!}>
                                   <a href="{{ URL::to('hardware') }}">
                                       <i class="fa fa-barcode"></i>
                                   </a>
                               </li>
+				@endcan
                           @endcan
-                          @can('licenses.view')
-                          <li {!! (Request::is('admin/licenses*') ? ' class="active"' : '') !!}>
-                              <a href="{{ URL::to('admin/licenses') }}">
-                                  <i class="fa fa-floppy-o"></i>
-                              </a>
-                          </li>
-                          @endcan
+			@can('assets.view.requestable')
+				  <li{!! (Request::is('account/view-assets') ? ' class="active"' : '') !!}>
+                                        <a href="{{ URL::to('account/view-assets') }}">
+                                                <i class="fa fa-dashboard"></i>
+                                        </a>
+                                </li>
+                 		<li{!! (Request::query('status') == 'Requestable' ? ' class="active"' : '') !!}>
+					<a href="{{ URL::to('account/requestable-assets?status=Requestable') }}">
+            					<i class="fa fa-laptop"></i>
+            				</a>
+            			</li>
+				<li{!! (Request::is('account/facility*') ? ' class="active"' : '') !!}>
+                                        <a href="{{ URL::to('account/facility?status=Facility') }}">
+                                        <i class="fa fa-university"></i>
+                                        </a>
+                                </li>
+                 		<li {!! (Request::is('account/categories*') ? ' class="active"' : '') !!}>
+                        		<a href="{{ URL::to('account/categories') }}">
+                			<i class="fa fa-list-ul"></i>
+                			</a>
+                		</li>
+              		@endcan
                           @can('accessories.view')
-                          <li {!! (Request::is('admin/accessories*') ? ' class="active"' : '') !!}>
-                              <a href="{{ URL::to('admin/accessories') }}">
+                          <li {!! (Request::is('account/accessories*') ? ' class="active"' : '') !!}>
+                              <a href="{{ URL::to('account/accessories') }}">
                                   <i class="fa fa-keyboard-o"></i>
                               </a>
                           </li>
@@ -153,21 +172,70 @@
                               </a>
                           </li>
                           @endcan
-
-                  @can('assets.view')
-                  <form class="navbar-form navbar-left form-horizontal" role="search" action="{{ route('findbytag/hardware') }}" method="get">
-                      <div class="col-xs-12 col-md-12">
-                          <div class="col-xs-12 form-group">
-                              <label class="sr-only" for="tagSearch">{{ trans('general.lookup_by_tag') }}</label>
-                              <input type="text" class="form-control" id="tagSearch" name="assetTag" placeholder="{{ trans('general.lookup_by_tag') }}">
-                              <input type="hidden" name="topsearch" value="true">
-                          </div>
-                          <div class="col-xs-1">
-                              <button type="submit" class="btn btn-primary pull-right"><i class="fa fa-search"></i></button>
-                          </div>
-                      </div>
-                  </form>
-                  @endcan
+			 @can('licenses.view')
+                          <li {!! (Request::is('account/licenses*') ? ' class="active"' : '') !!}>
+                              <a href="{{ URL::to('account/licenses') }}">
+                                  <i class="fa fa-floppy-o"></i>
+                              </a>
+                          </li>
+                          <li {!! (Request::is('account/training*') ? ' class="active"' : '') !!}>
+                              <a href="{{ URL::to('account/training') }}">
+                                  <i class="fa fa-certificate"></i>
+                              </a>
+                          </li>
+                          <li {!! (Request::is('account/access') ? ' class="active"' : '') !!}>
+                              <a href="{{ URL::to('account/access') }}">
+                                  <i class="fa fa-unlock-alt"></i>
+                              </a>
+                          </li>
+                          @endcan
+		@endcan
+		@can('admin')
+                  	@can('assets.view')
+                  	<li>	<form class="navbar-form navbar-left form-horizontal" role="search" action="{{ route('findbytag/hardware') }}" method="get">
+                      			<div class="col-xs-12 col-md-12"> 
+                          			<div class="col-xs-12 form-group">
+                              				<label class="sr-only" for="tagSearch">{{ trans('general.lookup_by_tag') }}</label>
+                              				<input type="text" class="form-control" id="tagSearch" name="assetTag" placeholder="{{ trans('general.lookup_by_tag') }}">
+                              				<input type="hidden" name="topsearch" value="true">
+                          			</div>
+                          			<div class="col-xs-1">
+                              				<button type="submit" class="btn btn-primary pull-right"><i class="fa fa-search"></i></button>
+                          			</div>
+                      		</div> 
+                  		</form>
+                	</li>  
+			@endcan
+		@else
+		<!--	 @can('licenses.view')
+                          <li {!! (Request::is('account/licenses*') ? ' class="active"' : '') !!}>
+                              <a href="{{ URL::to('account/licenses') }}">
+                                  <i class="fa fa-floppy-o"></i>
+                              </a>
+                          </li>
+                          @endcan
+                          @can('accessories.view')
+                          <li {!! (Request::is('account/accessories*') ? ' class="active"' : '') !!}>
+                              <a href="{{ URL::to('account/accessories') }}">
+                                  <i class="fa fa-keyboard-o"></i>
+                              </a>
+                          </li>
+                          @endcan
+                          @can('consumables.view')
+                          <li {!! (Request::is('account/consumables*') ? ' class="active"' : '') !!}>
+                              <a href="{{ URL::to('account/consumables') }}">
+                                  <i class="fa fa-tint"></i>
+                              </a>
+                          </li>
+                          @endcan
+                          @can('components.view')
+                          <li {!! (Request::is('account/components*') ? ' class="active"' : '') !!}>
+                              <a href="{{ URL::to('account/components') }}">
+                                  <i class="fa fa-hdd-o"></i>
+                              </a>
+                          </li>
+                          @endcan   -->
+		@endcan
 
                   @can('admin')
                   <li class="dropdown">
@@ -182,13 +250,6 @@
                                   <i class="fa fa-barcode fa-fw"></i>
                                   @lang('general.asset')</a>
                       </li>
-                       @endcan
-                       @can('licenses.create')
-                       <li {!! (Request::is('admin/licenses/create') ? 'class="active"' : '') !!}>
-                           <a href="{{ route('create/licenses') }}">
-                               <i class="fa fa-floppy-o fa-fw"></i>
-                               @lang('general.license')</a>
-                       </li>
                        @endcan
                        @can('accessories.create')
                        <li {!! (Request::is('admin/accessories/create') ? 'class="active"' : '') !!}>
@@ -214,8 +275,15 @@
                        @can('components.create')
                        <li {!! (Request::is('admin/components/create') ? 'class="active"' : '') !!}>
                            <a href="{{ route('create/component') }}">
-                           <i class="fa fa-hdd-o"></i>
-                           @lang('general.component')</a>
+                            &nbsp;<i class="fa fa-hdd-o"></i>
+                           &nbsp;@lang('general.component')</a>
+                       </li>
+                       @endcan
+			@can('licenses.create')
+                       <li {!! (Request::is('admin/licenses/create') ? 'class="active"' : '') !!}>
+                           <a href="{{ route('create/licenses') }}">
+                               <i class="fa fa-floppy-o fa-fw"></i>
+                               Software/Licenses</a>
                        </li>
                        @endcan
                    </ul>
@@ -271,7 +339,7 @@
                <li class="dropdown user user-menu">
                  <a href="#" class="dropdown-toggle" data-toggle="dropdown">
                    @if (Auth::user()->gravatar())
-                       <img src="{{ Auth::user()->gravatar() }}" class="user-image" alt="User Image">
+                      <img src="{{ Auth::user()->gravatar() }}" class="user-image" alt="User Image">
                    @else
                       <i class="fa fa-user fa-fws"></i>
                    @endif
@@ -281,10 +349,15 @@
                  <ul class="dropdown-menu">
                    <!-- User image -->
                    <li>
+
+			 @can('admin')
+                	<li {!! (Request::is('account/view-assets') ? ' class="active"' : '') !!}>
+              		<a href="{{ URL::to('account/view-assets') }}">
+                	<i class="fa fa-dashboard"></i><span>View Your Assets</span>
+              		</a>
+            		</li>
+            		@endcan
                      <li {!! (Request::is('account/profile') ? ' class="active"' : '') !!}>
-                       <a href="{{ route('view-assets') }}">
-                             <i class="fa fa-check fa-fw"></i> @lang('general.viewassets')
-                       </a>
                           <a href="{{ route('profile') }}">
                              <i class="fa fa-user fa-fw"></i> @lang('general.editprofile')
                          </a>
@@ -320,7 +393,7 @@
                        </li>
                        <li {!! (Request::is('admin/settings/categories*') ? ' class="active"' : '') !!}>
                            <a href="{{ URL::to('admin/settings/categories') }}">
-                               <i class="fa fa-check fa-fw"></i> @lang('general.categories')
+                               <i class="fa fa-list-ul fa-fw"></i> @lang('general.categories')
                            </a>
                        </li>
                        <li {!! (Request::is('admin/settings/manufacturers*') ? ' class="active"' : '') !!}>
@@ -391,12 +464,27 @@
             @can('admin')
             <li {!! (\Request::route()->getName()=='home' ? ' class="active"' : '') !!}>
               <a href="{{ route('home') }}">
-                <i class="fa fa-dashboard"></i> <span>Dashboard</span>
+                <i class="fa fa-dashboard"></i><span>Dashboard</span>
+              </a>
+            </li>
+	    @else
+		<li {!! (Request::is('account/view-assets') ? ' class="active"' : '') !!}>
+              <a href="{{ URL::to('account/view-assets') }}">
+                <i class="fa fa-dashboard"></i><span>Dashboard</span>
               </a>
             </li>
             @endcan
             @can('assets.view')
-            <li class="treeview{{ (Request::is('hardware*') ? ' active' : '') }}">
+            	@can('admin')
+
+		
+	 	<li{!! (Request::is(Input::get('status')=='Key') ? ' class="active"' : '') !!}>
+                  <a href="{{ URL::to('hardware?status=Key') }}">
+                    <i class="fa fa-key"></i>
+                    <span>Keys/Lockers</span>
+                  </a>
+              </li>
+		<li class="treeview{{ (Request::is('hardware*')&&Request::is(Input::get('status')!='Key') ? ' active' : '') }}">
                 <a href="#"><i class="fa fa-barcode"></i>
                   <span>{{ trans('general.assets') }}</span>
                   <i class="fa fa-angle-left pull-right"></i>
@@ -416,7 +504,7 @@
                   <li{!! (Request::query('status') == 'Pending' ? ' class="active"' : '') !!}><a href="{{ URL::to('hardware?status=Pending') }}">@lang('general.pending')</a></li>
                   <li{!! (Request::query('status') == 'Undeployable' ? ' class="active"' : '') !!} ><a href="{{ URL::to('hardware?status=Undeployable') }}">@lang('general.undeployable')</a></li>
                   <li{!! (Request::query('status') == 'Archived' ? ' class="active"' : '') !!}><a href="{{ URL::to('hardware?status=Archived') }}">@lang('admin/hardware/general.archived')</a></li>
-                    <li{!! (Request::query('status') == 'Requestable' ? ' class="active"' : '') !!}><a href="{{ URL::to('hardware?status=Requestable') }}"><a href="{{ URL::to('hardware?status=Requestable') }}" >@lang('admin/hardware/general.requestable')</a></li>
+                    <li{!! (Request::query('status') == 'Requestable' ? ' class="active"' : '') !!}><a href="{{ URL::to('hardware?status=Requestable') }}">@lang('admin/hardware/general.requestable')</a></li>
 
                   <li class="divider">&nbsp;</li>
                     <li{!! (Request::is('hardware/bulkcheckout') ? ' class="active>"' : '') !!}>
@@ -431,12 +519,38 @@
                   <li><a href="{{ URL::to('hardware/import') }}"  >@lang('general.import') </a></li>
                 </ul>
               </li>
+	@endcan
+@endcan 
+@can('assets.view.requestable')
+	@can('admin')
+	@else
+		 <li{!! (Request::query('status') == 'Requestable' ? ' class="active"' : '') !!}><a href="{{ URL::to('account/requestable-assets?status=Requestable') }}">
+           <!-- <li{!! (Request::is('account/requestable-assets?status=Requestable') ? ' class="active"' : '') !!}> 
+            <a href="{{ route('requestable-assets') }}"> -->
+            <i class="fa fa-laptop"></i>
+            <span>{{ trans('admin/hardware/general.requestable') }}</span>
+            </a>
+            </li>
+	<li {!! (Request::is('account/facility*') ? ' class="active"' : '') !!}>
+                 <a href="{{ URL::to('account/facility?status=Facility') }}">
+                <i class="fa fa-university"></i>
+                <span>Facility</span>
+                </a>
+                </li>
+		 <li {!! (Request::is('account/categories*') ? ' class="active"' : '') !!}> 
+			<a href="{{ URL::to('account/categories') }}">
+		<i class="fa fa-list-ul"></i>	
+		<span>@lang('general.categories')</span>
+		</a>
+		</li>
               @endcan
-              @can('licenses.view')
+	@endcan
+	@can('admin')
+	     @can('licenses.view')
               <li{!! (Request::is('admin/licenses*') ? ' class="active"' : '') !!}>
                   <a href="{{ URL::to('admin/licenses') }}">
                     <i class="fa fa-floppy-o"></i>
-                    <span>@lang('general.licenses')</span>
+                    <span>Software/Licenses</span>
                   </a>
               </li>
               @endcan
@@ -464,13 +578,15 @@
                 </a>
             </li>
             @endcan
-            @can('users.view')
-            <li{!! (Request::is('admin/users*') ? ' class="active"' : '') !!}>
+		@can('users.view')
+        	@can('admin')
+	    <li{!! (Request::is('admin/users*') ? ' class="active"' : '') !!}>
                   <a href="{{ URL::to('admin/users') }}">
                       <i class="fa fa-users"></i>
                       <span>@lang('general.people')</span>
                   </a>
             </li>
+		@endcan
             @endcan
             @can('reports.view')
             <li class="treeview{{ (Request::is('reports*') ? ' active' : '') }}">
@@ -484,7 +600,8 @@
 	                 <li><a href="{{ URL::to('reports/activity') }}" {{ (Request::is('reports/activity') ? ' class="active"' : '') }} >@lang('general.activity_report')</a></li>
 
                     <li><a href="{{ URL::to('reports/depreciation') }}" {{ (Request::is('reports/depreciation') ? ' class="active"' : '') }} >@lang('general.depreciation_report')</a></li>
-                    <li><a href="{{ URL::to('reports/licenses') }}" {{ (Request::is('reports/licenses') ? ' class="active"' : '') }} >@lang('general.license_report')</a></li>
+            
+        <li><a href="{{ URL::to('reports/licenses') }}" {{ (Request::is('reports/licenses') ? ' class="active"' : '') }} >@lang('general.license_report')</a></li>
                     <li><a href="{{ URL::to('reports/asset_maintenances') }}" {{ (Request::is('reports/asset_maintenances') ? ' class="active"' : '') }} >@lang('general.asset_maintenance_report')</a></li>
                     <li><a href="{{ URL::to('reports/assets') }}" {{ (Request::is('reports/assets') ? ' class="active"' : '') }} >@lang('general.asset_report')</a></li>
                     <li><a href="{{ URL::to('reports/unaccepted_assets') }}" {{ (Request::is('reports/unaccepted_assets') ? ' class="active"' : '') }} >@lang('general.unaccepted_asset_report')</a></li>
@@ -494,14 +611,52 @@
                 </ul>
             </li>
             @endcan
-            @can('assets.view.requestable')
-            <li{!! (Request::is('account/requestable-assets') ? ' class="active"' : '') !!}>
-            <a href="{{ route('requestable-assets') }}">
-            <i class="fa fa-laptop"></i>
-            <span>{{ trans('admin/hardware/general.requestable') }}</span>
-            </a>
+	@else
+              @can('accessories.view')
+              <li{!! (Request::is('account/accessories*') ? ' class="active"' : '') !!}>
+                <a href="{{ URL::to('account/accessories') }}">
+                  <i class="fa fa-keyboard-o"></i>
+                  <span>@lang('general.accessories')</span>
+                </a>
+              </li>
+              @endcan
+              @can('consumables.view')
+            <li{!! (Request::is('account/consumables*') ? ' class="active"' : '') !!}>
+                <a href="{{ URL::to('account/consumables') }}">
+                  <i class="fa fa-tint"></i>
+                  <span>@lang('general.consumables')</span>
+                </a>
+            </li>
+             @endcan
+             @can('components.view')
+            <li{!! (Request::is('account/components*') ? ' class="active"' : '') !!}>
+                <a href="{{ URL::to('account/components') }}">
+                  <i class="fa fa-hdd-o"></i>
+                  <span>@lang('general.components')</span>
+                </a>
             </li>
             @endcan
+		  @can('licenses.view')
+              <li{!! (Request::is('account/licenses*') ? ' class="active"' : '') !!}>
+                  <a href="{{ URL::to('account/licenses') }}">
+                    <i class="fa fa-floppy-o"></i>
+                    <span>Software/Licenses</span>
+                  </a>
+              </li>
+		 <li{!! (Request::is('account/training*') ? ' class="active"' : '') !!}>
+                  <a href="{{ URL::to('account/training') }}">
+                    <i class="fa fa-certificate"></i>
+                    <span>Training/Safety</span>
+                  </a>
+              </li>
+		 <li{!! (Request::is('account/access') ? ' class="active"' : '') !!}>
+                  <a href="{{ URL::to('account/access') }}">
+                    <i class="fa fa-unlock-alt"></i>
+                    <span>Access/Status</span>
+                  </a>
+              </li>
+              @endcan
+	@endcan
           </ul>
         </section>
         <!-- /.sidebar -->
@@ -550,7 +705,11 @@
       </div><!-- /.content-wrapper -->
 
       <footer class="main-footer">
-        <div class="pull-right hidden-xs">
+
+	  @include('custom/footer')
+
+<!--
+	 <div class="pull-right hidden-xs">
           <b>Version</b> {{  config('version.hash_version') }}
           <a target="_blank" class="btn btn-default btn-xs" href="https://snipe-it.readme.io">Documentation</a>
           <a target="_blank" class="btn btn-default btn-xs" href="https://snipe-it-manual.readme.io">User's Manual</a>
@@ -558,7 +717,10 @@
         </div>
         <a target="_blank" href="https://snipeitapp.com">Snipe-IT</a> is an open source
         project, made with <i class="fa fa-heart" style="color: #a94442; font-size: 10px"></i> by <a href="https://twitter.com/snipeyhead">@snipeyhead</a>.
-      </footer>
+    
+-->
+
+</footer>
 
 
 

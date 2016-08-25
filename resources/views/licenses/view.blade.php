@@ -221,10 +221,10 @@
                     @if ($license->purchase_order)
                     <tr>
                       <td>
-                        {{ trans('admin/licenses/form.purchase_order') }}:
+                        Safety & Training Docs Link
                       </td>
                       <td>
-                        {{ $license->purchase_order }}
+                        <a href="{{ $license->purchase_order }}">{{ $license->purchase_order }}</a>
                       </td>
                     </tr>
                     @endif

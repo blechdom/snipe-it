@@ -1008,7 +1008,8 @@ class LicensesController extends Controller
             $rows[] = array(
                 'id'                => $license->id,
                 'name'              => (string) link_to('/admin/licenses/'.$license->id.'/view', $license->name),
-                'serial'            => (string) link_to('/admin/licenses/'.$license->id.'/view', mb_strimwidth($license->serial, 0, 50, "...")),
+                'name_account'	    =>$license->name,
+		'serial'            => (string) link_to('/admin/licenses/'.$license->id.'/view', mb_strimwidth($license->serial, 0, 50, "...")),
                 'totalSeats'        => $license->totalSeatsByLicenseID(),
                 'remaining'         => $license->remaincount(),
                 'license_name'      => e($license->license_name),
@@ -1016,7 +1017,7 @@ class LicensesController extends Controller
                 'purchase_date'     => ($license->purchase_date) ? $license->purchase_date : '',
                 'expiration_date'     => ($license->expiration_date) ? $license->expiration_date : '',
                 'purchase_cost'     => ($license->purchase_cost) ? number_format($license->purchase_cost, 2) : '',
-                'purchase_order'     => ($license->purchase_order) ? e($license->purchase_order) : '',
+                'purchase_order'     => ($license->purchase_order) ? '<a href="'.$license->purchase_order.'">Safety & Training Docs</a>' : '',
                 'order_number'     => ($license->order_number) ? e($license->order_number) : '',
                 'notes'     => ($license->notes) ? e($license->notes) : '',
                 'actions'           => $actions,
@@ -1029,6 +1030,221 @@ class LicensesController extends Controller
         return $data;
     }
 
+  public function getSoftwareDatatable()
+    {
+        $licenses = Company::scopeCompanyables(License::with('company'));
+	$licenses = $licenses->where('licenses.name', 'like', '%Software%')
+			->orWhere('licenses.name', 'like', '%License%');
+
+
+        if (Input::has('search')) {
+            $licenses = $licenses->TextSearch(Input::get('search'));
+        }
+
+        $allowed_columns = ['id','name','purchase_cost','expiration_date','purchase_order','order_number','notes','purchase_date','serial'];
+        $order = Input::get('order') === 'asc' ? 'asc' : 'desc';
+        $sort = in_array(Input::get('sort'), $allowed_columns) ? e(Input::get('sort')) : 'created_at';
+
+        $licenses = $licenses->orderBy($sort, $order);
+
+        $licenseCount = $licenses->count();
+        $licenses = $licenses->skip(Input::get('offset'))->take(Input::get('limit'))->get();
+
+        $rows = array();
+
+        foreach ($licenses as $license) {
+            $actions = '<span style="white-space: nowrap;">';
+
+            if (Gate::allows('licenses.checkout')) {
+                $actions .= '<a href="' . route('freecheckout/license',
+                        $license->id) . '" class="btn btn-primary btn-sm' . (($license->remaincount() > 0) ? '' : ' disabled') . '" style="margin-right:5px;">' . trans('general.checkout') . '</a> ';
+            }
+
+            if (Gate::allows('licenses.create')) {
+                $actions .= '<a href="' . route('clone/license',
+                        $license->id) . '" class="btn btn-info btn-sm" style="margin-right:5px;" title="Clone asset"><i class="fa fa-files-o"></i></a>';
+            }
+            if (Gate::allows('licenses.edit')) {
+                $actions .= '<a href="' . route('update/license',
+                        $license->id) . '" class="btn btn-warning btn-sm" style="margin-right:5px;"><i class="fa fa-pencil icon-white"></i></a>';
+            }
+            if (Gate::allows('licenses.delete')) {
+                $actions .= '<a data-html="false" class="btn delete-asset btn-danger btn-sm" data-toggle="modal" href="' . route('delete/license',
+                        $license->id) . '" data-content="' . trans('admin/licenses/message.delete.confirm') . '" data-title="' . trans('general.delete') . ' ' . htmlspecialchars($license->name) . '?" onClick="return false;"><i class="fa fa-trash icon-white"></i></a>';
+            }
+            $actions .='</span>';
+
+ $rows[] = array(
+                'id'                => $license->id,
+                'name'              => (string) link_to('/admin/licenses/'.$license->id.'/view', $license->name),
+                'name_account'      =>$license->name,
+                'serial'            => (string) link_to('/admin/licenses/'.$license->id.'/view', mb_strimwidth($license->serial, 0, 50, "...")),
+                'totalSeats'        => $license->totalSeatsByLicenseID(),
+                'remaining'         => $license->remaincount(),
+                'license_name'      => e($license->license_name),
+                'license_email'      => e($license->license_email),
+                'purchase_date'     => ($license->purchase_date) ? $license->purchase_date : '',
+                'expiration_date'     => ($license->expiration_date) ? $license->expiration_date : '',
+                'purchase_cost'     => ($license->purchase_cost) ? number_format($license->purchase_cost, 2) : '',
+                'purchase_order'     => ($license->purchase_order) ? e($license->purchase_order) : '',
+                'order_number'     => ($license->order_number) ? e($license->order_number) : '',
+                'notes'     => ($license->notes) ? e($license->notes) : '',
+                'actions'           => $actions,
+                 'request_action' => '<div style=" white-space: nowrap;"><a href="' . route('account/request-license', $license->id) . '"class="btn btn-info btn-sm" title="Request">Request</a>',
+		'companyName'       => is_null($license->company) ? '' : e($license->company->name)
+            );
+        }
+
+        $data = array('total' => $licenseCount, 'rows' => $rows);
+
+        return $data;
+    }
+
+
+
+
+  public function getTrainingDatatable()
+    {
+        $licenses = Company::scopeCompanyables(License::with('company'));
+	$licenses = $licenses->where('licenses.name', 'like', '%Training%')
+                        ->orWhere('licenses.name', 'like', '%Safety%');
+
+
+        if (Input::has('search')) {
+            $licenses = $licenses->TextSearch(Input::get('search'));
+        }
+
+        $allowed_columns = ['id','name','purchase_cost','expiration_date','purchase_order','order_number','notes','purchase_date','serial'];
+        $order = Input::get('order') === 'asc' ? 'asc' : 'desc';
+        $sort = in_array(Input::get('sort'), $allowed_columns) ? e(Input::get('sort')) : 'created_at';
+
+        $licenses = $licenses->orderBy($sort, $order);
+
+        $licenseCount = $licenses->count();
+        $licenses = $licenses->skip(Input::get('offset'))->take(Input::get('limit'))->get();
+
+        $rows = array();
+
+        foreach ($licenses as $license) {
+            $actions = '<span style="white-space: nowrap;">';
+
+            if (Gate::allows('licenses.checkout')) {
+                $actions .= '<a href="' . route('freecheckout/license',
+                        $license->id) . '" class="btn btn-primary btn-sm' . (($license->remaincount() > 0) ? '' : ' disabled') . '" style="margin-right:5px;">' . trans('general.checkout') . '</a> ';
+            }
+
+            if (Gate::allows('licenses.create')) {
+                $actions .= '<a href="' . route('clone/license',
+                        $license->id) . '" class="btn btn-info btn-sm" style="margin-right:5px;" title="Clone asset"><i class="fa fa-files-o"></i></a>';
+            }
+            if (Gate::allows('licenses.edit')) {
+                $actions .= '<a href="' . route('update/license',
+                        $license->id) . '" class="btn btn-warning btn-sm" style="margin-right:5px;"><i class="fa fa-pencil icon-white"></i></a>';
+            }
+            if (Gate::allows('licenses.delete')) {
+                $actions .= '<a data-html="false" class="btn delete-asset btn-danger btn-sm" data-toggle="modal" href="' . route('delete/license',
+                        $license->id) . '" data-content="' . trans('admin/licenses/message.delete.confirm') . '" data-title="' . trans('general.delete') . ' ' . htmlspecialchars($license->name) . '?" onClick="return false;"><i class="fa fa-trash icon-white"></i></a>';
+            }
+            $actions .='</span>';
+
+ $rows[] = array(
+                'id'                => $license->id,
+                'name'              => (string) link_to('/admin/licenses/'.$license->id.'/view', $license->name),
+                'name_account'      =>$license->name,
+                'serial'            => (string) link_to('/admin/licenses/'.$license->id.'/view', mb_strimwidth($license->serial, 0, 50, "...")),
+                'totalSeats'        => $license->totalSeatsByLicenseID(),
+                'remaining'         => $license->remaincount(),
+                'license_name'      => e($license->license_name),
+                'license_email'      => e($license->license_email),
+                'purchase_date'     => ($license->purchase_date) ? $license->purchase_date : '',
+                'expiration_date'     => ($license->expiration_date) ? $license->expiration_date : '',
+                'purchase_cost'     => ($license->purchase_cost) ? number_format($license->purchase_cost, 2) : '',
+                'purchase_order'     => ($license->purchase_order) ? '<a href="'.$license->purchase_order.'">Safety & Training Docs</a>' : '',
+                'order_number'     => ($license->order_number) ? e($license->order_number) : '',
+                'notes'     => ($license->notes) ? e($license->notes) : '',
+                'actions'           => $actions,
+                 'request_action' => '<div style=" white-space: nowrap;"><a href="' . route('account/request-license', $license->id) . '"class="btn btn-info btn-sm" title="Request">Request</a>',
+		'companyName'       => is_null($license->company) ? '' : e($license->company->name)
+            );
+        }
+
+        $data = array('total' => $licenseCount, 'rows' => $rows);
+
+        return $data;
+    }
+
+
+
+
+
+  public function getAccessDatatable()
+    {
+        $licenses = Company::scopeCompanyables(License::with('company'));
+	$licenses = $licenses->where('licenses.name', 'like', '%Access%')
+                        ->orWhere('licenses.name', 'like', '%Status%');
+
+
+        if (Input::has('search')) {
+            $licenses = $licenses->TextSearch(Input::get('search'));
+        }
+
+        $allowed_columns = ['id','name','purchase_cost','expiration_date','purchase_order','order_number','notes','purchase_date','serial'];
+        $order = Input::get('order') === 'asc' ? 'asc' : 'desc';
+        $sort = in_array(Input::get('sort'), $allowed_columns) ? e(Input::get('sort')) : 'created_at';
+
+        $licenses = $licenses->orderBy($sort, $order);
+
+        $licenseCount = $licenses->count();
+        $licenses = $licenses->skip(Input::get('offset'))->take(Input::get('limit'))->get();
+
+        $rows = array();
+
+        foreach ($licenses as $license) {
+            $actions = '<span style="white-space: nowrap;">';
+
+            if (Gate::allows('licenses.checkout')) {
+                $actions .= '<a href="' . route('freecheckout/license',
+                        $license->id) . '" class="btn btn-primary btn-sm' . (($license->remaincount() > 0) ? '' : ' disabled') . '" style="margin-right:5px;">' . trans('general.checkout') . '</a> ';
+            }
+
+            if (Gate::allows('licenses.create')) {
+                $actions .= '<a href="' . route('clone/license',
+                        $license->id) . '" class="btn btn-info btn-sm" style="margin-right:5px;" title="Clone asset"><i class="fa fa-files-o"></i></a>';
+            }
+            if (Gate::allows('licenses.edit')) {
+                $actions .= '<a href="' . route('update/license',
+                        $license->id) . '" class="btn btn-warning btn-sm" style="margin-right:5px;"><i class="fa fa-pencil icon-white"></i></a>';
+            }
+            if (Gate::allows('licenses.delete')) {
+                $actions .= '<a data-html="false" class="btn delete-asset btn-danger btn-sm" data-toggle="modal" href="' . route('delete/license',
+                        $license->id) . '" data-content="' . trans('admin/licenses/message.delete.confirm') . '" data-title="' . trans('general.delete') . ' ' . htmlspecialchars($license->name) . '?" onClick="return false;"><i class="fa fa-trash icon-white"></i></a>';
+            }
+            $actions .='</span>';
+ $rows[] = array(
+                'id'                => $license->id,
+                'name'              => (string) link_to('/admin/licenses/'.$license->id.'/view', $license->name),
+                'name_account'      =>$license->name,
+                'serial'            => (string) link_to('/admin/licenses/'.$license->id.'/view', mb_strimwidth($license->serial, 0, 50, "...")),
+                'totalSeats'        => $license->totalSeatsByLicenseID(),
+                'remaining'         => $license->remaincount(),
+                'license_name'      => e($license->license_name),
+                'license_email'      => e($license->license_email),
+                'purchase_date'     => ($license->purchase_date) ? $license->purchase_date : '',
+                'expiration_date'     => ($license->expiration_date) ? $license->expiration_date : '',
+                'purchase_cost'     => ($license->purchase_cost) ? number_format($license->purchase_cost, 2) : '',
+                'purchase_order'     => ($license->purchase_order) ? e($license->purchase_order) : '',
+                'order_number'     => ($license->order_number) ? e($license->order_number) : '',
+                'notes'     => ($license->notes) ? e($license->notes) : '',
+                'actions'           => $actions,
+		'request_action' => '<div style=" white-space: nowrap;"><a href="' . route('account/request-license', $license->id) . '"class="btn btn-info btn-sm" title="Request">Request</a>',
+                'companyName'       => is_null($license->company) ? '' : e($license->company->name)
+            );
+        }
+
+        $data = array('total' => $licenseCount, 'rows' => $rows);
+
+        return $data;
+    }
     /**
     * Generates the next free seat ID for checkout.
     *

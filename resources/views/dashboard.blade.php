@@ -100,7 +100,7 @@
                     <tr>
                         <th></th>
                         <th class="col-md-2"><span class="line"></span>{{ trans('general.date') }}</th>
-                        <th class="col-md-2"><span class="line"></span>{{ trans('general.admin') }}</th>
+                        <th class="col-md-2"><span class="line"></span>User</th>
                         <th class="col-md-2"><span class="line"></span>{{ trans('table.actions') }}</th>
                         <th class="col-md-3"><span class="line"></span>{{ trans('table.item') }}</th>
                         <th class="col-md-3"><span class="line"></span>To</th>
@@ -115,6 +115,8 @@
                                 <i class="fa fa-barcode"></i>
                             @elseif ($activity->asset_type=="accessory")
                                 <i class="fa fa-keyboard-o"></i>
+			    @elseif ($activity->asset_type=="Maintenance Request")
+                                <i class="fa fa-wrench"></i>
                             @elseif ($activity->asset_type=="consumable")
                                 <i class="fa fa-tint"></i>
                             @elseif ($activity->asset_type=="license")
@@ -142,7 +144,9 @@
                        <td>
                            @if (($activity->assetlog) && ($activity->asset_type=="hardware"))
                               <a href="{{ route('view/hardware', $activity->asset_id) }}">{{ $activity->assetlog->showAssetName() }}</a>
-                            @elseif (($activity->licenselog) && ($activity->asset_type=="software"))
+                        @elseif (($activity->assetlog) && ($activity->asset_type=="Maintenance Request"))
+                              <a href="{{ route('view/hardware', $activity->asset_id) }}">{{ $activity->assetlog->showAssetName() }}</a>    
+			@elseif (($activity->licenselog) && ($activity->asset_type=="software"))
                               <a href="{{ route('view/license', $activity->asset_id) }}">{{ $activity->licenselog->name }}</a>
                                   @elseif (($activity->consumablelog) && ($activity->asset_type=="consumable"))
                                 <a href="{{ route('view/consumable', $activity->consumable_id) }}">{{ $activity->consumablelog->name }}</a>

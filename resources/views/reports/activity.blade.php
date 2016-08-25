@@ -37,10 +37,10 @@
             </tr>
         </thead>
         <tbody>
-
+	@if ($log_actions)
             @foreach ($log_actions as $log_action)
             <tr>
-                <td><a href="../admin/users/{{ $log_action->adminlog->id }}/view">{{ $log_action->adminlog->fullName() }}</a></td>
+              <td><a href="../admin/users/{{ $log_action->adminlog->id }}/view">{{ $log_action->adminlog->fullName() }}</a></td>
                 <td>{{ $log_action->action_type }}</td>
                 <td>
     	            @if ($log_action->asset_type=="hardware")
@@ -57,6 +57,8 @@
                 <td>
                 @if (($log_action->assetlog) && ($log_action->asset_type=="hardware"))
                      {{ $log_action->assetlog->showAssetName() }}
+    		@elseif (($log_action->assetlog) && ($log_action->asset_type=="Maintenance Request"))
+			{{ $log_action->assetlog->showAssetName() }}
                  @elseif (($log_action->licenselog) && ($log_action->asset_type=="software"))
                      {{ $log_action->licenselog->name }}
                  @elseif (($log_action->consumablelog) && ($log_action->asset_type=="consumable"))
@@ -65,7 +67,7 @@
                      {{ $log_action->accessorylog->name }}
                  @else
                      {{ trans('general.bad_data') }}
-                 @endif
+                 @endif 
                 </td>
                 <td>
     	            @if ($log_action->userlog)
@@ -73,17 +75,17 @@
     	            @endif
                 </td>
 
-                <td>{{ $log_action->created_at }}</td>
+                <td>{{ $log_action->created_at }}</td> 
             </tr>
             @endforeach
+	@endif
         </tbody>
     </table>
-
     </div>
     </div>
   </div>
 
-
+<!--
 
 @section('moar_scripts')
 <script src="{{ asset('assets/js/bootstrap-table.js') }}"></script>
@@ -125,5 +127,5 @@
     });
 </script>
 @stop
-
+-->
 @stop
