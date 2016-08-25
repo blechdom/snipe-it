@@ -22,11 +22,12 @@ class Accessory extends Model
     * Accessory validation rules
     */
     public $rules = array(
-      'name'        => 'required|min:3|max:255',
-      'qty'         => 'required|integer|min:1',
-      'category_id' => 'required|integer',
-      'company_id'  => 'integer',
-      'min_amt'     => 'integer|min:1',
+        'name'              => 'required|min:3|max:255',
+        'qty'               => 'required|integer|min:1',
+        'category_id'       => 'required|integer',
+        'company_id'        => 'integer',
+        'min_amt'           => 'integer|min:1',
+        'purchase_cost'     => 'numeric',
     );
 
 
@@ -79,6 +80,11 @@ class Accessory extends Model
     public function hasUsers()
     {
         return $this->belongsToMany('\App\Models\User', 'accessories_users', 'accessory_id', 'assigned_to')->count();
+    }
+
+    public function manufacturer()
+    {
+        return $this->belongsTo('\App\Models\Manufacturer', 'manufacturer_id');
     }
 
     public function checkin_email()

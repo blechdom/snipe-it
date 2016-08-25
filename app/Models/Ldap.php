@@ -191,6 +191,7 @@ class Ldap extends Model
     {
         $item = Ldap::parseAndMapLdapAttributes($ldapatttibutes);
 
+
         // Create user from LDAP data
         if (!empty($item["username"])) {
             $user = new User;
@@ -198,7 +199,14 @@ class Ldap extends Model
             $user->last_name = $item["lastname"];
             $user->username = $item["username"];
             $user->email = $item["email"];
-            $user->password = bcrypt(Input::get("password"));
+
+            if (Setting::getSettings()->ldap_pw_sync=='1') {
+                $user->password = bcrypt(Input::get("password"));
+            } else {
+                $pass = substr(str_shuffle("0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"), 0, 25);
+                $user->password = bcrypt($pass);
+            }
+
             $user->activated = 1;
             $user->ldap_import = 1;
             $user->notes = 'Imported on first login from LDAP';
@@ -239,8 +247,12 @@ class Ldap extends Model
 
         // Perform the search
         do {
+
             // Paginate (non-critical, if not supported by server)
-            ldap_control_paged_result($ldapconn, $page_size, false, $cookie);
+            if (!$ldap_paging = @ldap_control_paged_result($ldapconn, $page_size, false, $cookie)) {
+                throw new Exception('Problem with your LDAP connection. Try checking the Use TLS setting in Admin > Settings. ');
+            }
+
 
             $search_results = ldap_search($ldapconn, $base_dn, '('.$filter.')');
 

@@ -79,7 +79,7 @@ Route::group([ 'prefix' => 'api', 'middleware' => 'auth' ], function () {
     /*---Manufacturers API---*/
     Route::group(array('prefix'=>'manufacturers'), function () {
         Route::get('list', array('as'=>'api.manufacturers.list', 'uses'=>'ManufacturersController@getDatatable'));
-        Route::get('{manufacturerID}/view', array('as'=>'api.manufacturers.view', 'uses'=>'ManufacturersController@getDataView'));
+        Route::get('{manufacturerID}/view/{itemtype}', array('as'=>'api.manufacturers.view', 'uses'=>'ManufacturersController@getDataView'));
     });
 
     /*---Suppliers API---*/
@@ -191,6 +191,19 @@ Route::group(
     'middleware' => ['web',
     'auth']],
     function () {
+
+        Route::get('history', [
+            'as' => 'asset.import-history',
+            'middleware' => 'authorize:assets.checkout',
+            'uses' => 'AssetsController@getImportHistory'
+        ]);
+
+        Route::post('history', [
+            'as' => 'asset.process-import-history',
+            'middleware' => 'authorize:assets.checkout',
+            'uses' => 'AssetsController@postImportHistory'
+        ]);
+
 
         Route::get('create/{model?}', [
                 'as'   => 'create/hardware',

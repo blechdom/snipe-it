@@ -23,6 +23,7 @@ use Validator;
 use Artisan;
 use Auth;
 use Config;
+use League\Csv\Reader;
 use DB;
 use Image;
 use Input;
@@ -239,7 +240,7 @@ class AssetsController extends Controller
                     $constraint->upsize();
                 })->save($path);
                 $asset->image = $file_name;
-            } catch(\Exception $e) {
+            } catch (\Exception $e) {
                 \Input::flash();
                 $messageBag = new \Illuminate\Support\MessageBag();
                 $messageBag->add('image', $e->getMessage());
@@ -353,7 +354,7 @@ class AssetsController extends Controller
         }
 
         if ($request->has('purchase_cost')) {
-            $asset->purchase_cost = e(number_format($request->input('purchase_cost'), 2, '.', ''));
+            $asset->purchase_cost = e(Helper::formatCurrencyOutput($request->input('purchase_cost')));
         } else {
             $asset->purchase_cost =  null;
         }
@@ -417,7 +418,7 @@ class AssetsController extends Controller
                     $constraint->upsize();
                 })->save($path);
                 $asset->image = $file_name;
-            } catch(\Exception $e) {
+            } catch (\Exception $e) {
                 \Input::flash();
                 $messageBag = new \Illuminate\Support\MessageBag();
                 $messageBag->add('image', $e->getMessage());
@@ -529,6 +530,8 @@ class AssetsController extends Controller
             return redirect()->to('hardware')->with('error', trans('admin/hardware/message.does_not_exist'));
         } elseif (!Company::isCurrentUserHasAccess($asset)) {
             return redirect()->to('hardware')->with('error', trans('general.insufficient_permissions'));
+        } elseif (!$asset->availableForCheckout()) {
+            return redirect()->to('hardware')->with('error', trans('admin/hardware/message.checkout.not_available'));
         }
 
         $user = User::find(e(Input::get('assigned_to')));
@@ -767,7 +770,7 @@ class AssetsController extends Controller
                 } else {
                     $barcode = new \Com\Tecnick\Barcode\Barcode();
                     $barcode_obj =  $barcode->getBarcodeObj($settings->barcode_type, route('view/hardware', $asset->id), $size['height'], $size['width'], 'black', array(-2, -2, -2, -2));
-                    file_put_contents($qr_file,$barcode_obj->getPngData());
+                    file_put_contents($qr_file, $barcode_obj->getPngData());
                     return response($barcode_obj->getPngData())->header('Content-type', 'image/png');
                 }
 
@@ -801,7 +804,7 @@ class AssetsController extends Controller
             } else {
                 $barcode = new \Com\Tecnick\Barcode\Barcode();
                 $barcode_obj = $barcode->getBarcodeObj($settings->alt_barcode, $asset->asset_tag, 250, 20);
-                file_put_contents($barcode_file,$barcode_obj->getPngData());
+                file_put_contents($barcode_file, $barcode_obj->getPngData());
                 return response($barcode_obj->getPngData())->header('Content-type', 'image/png');
             }
         }
@@ -889,11 +892,11 @@ class AssetsController extends Controller
                 try {
                     $file->move($path, $date.'-'.$fixed_filename);
                 } catch (\Symfony\Component\HttpFoundation\File\Exception\FileException $exception) {
-                        $results['error']=trans('admin/hardware/message.upload.error');
-                        if( config('app.debug')) {
-                            $results['error'].= ' ' . $exception->getMessage();
-                        }
-                        return $results;
+                    $results['error']=trans('admin/hardware/message.upload.error');
+                    if (config('app.debug')) {
+                        $results['error'].= ' ' . $exception->getMessage();
+                    }
+                    return $results;
                 }
                 $name = date('Y-m-d-his').'-'.$fixed_filename;
                 $filesize = Setting::fileSizeConvert(filesize($path.'/'.$name));
@@ -1001,6 +1004,171 @@ class AssetsController extends Controller
         ->with('category', $category_list)
         ->with('company_list', $company_list);
 
+    }
+
+
+    /**
+     * Return history import view
+     *
+     * @author [A. Gianotto] [<snipe@snipe.net>]
+     * @since [v1.0]
+     * @return View
+     */
+    public function getImportHistory()
+    {
+
+        return View::make('hardware/history');
+    }
+
+    /**
+     * Import history
+     *
+     * This needs a LOT of love. It's done very inelegantly right now, and there are
+     * a ton of optimizations that could (and should) be done.
+     *
+     * @author [A. Gianotto] [<snipe@snipe.net>]
+     * @since [v3.3]
+     * @return View
+     */
+    public function postImportHistory(Request $request)
+    {
+
+        if (!ini_get("auto_detect_line_endings")) {
+            ini_set("auto_detect_line_endings", '1');
+        }
+
+        $assets = Asset::all(['asset_tag']);
+
+        $csv = Reader::createFromPath(Input::file('user_import_csv'));
+        $csv->setNewline("\r\n");
+        //get the first row, usually the CSV header
+        //$headers = $csv->fetchOne();
+
+        $results = $csv->fetchAssoc();
+        $item = array();
+        $status = array();
+
+
+        foreach($results as $row) {
+
+            if (is_array($row)) {
+
+                $row = array_change_key_case($row, CASE_LOWER);
+                $asset_tag = Helper::array_smart_fetch($row, "asset tag");
+                if (!array_key_exists($asset_tag, $item)) {
+                    $item[$asset_tag] = array();
+                }
+                $batch_counter = count($item[$asset_tag]);
+
+                $item[$asset_tag][$batch_counter]['checkout_date'] = Carbon::parse(Helper::array_smart_fetch($row, "date"))->format('Y-m-d H:i:s');
+
+                $item[$asset_tag][$batch_counter]['asset_tag'] = Helper::array_smart_fetch($row, "asset tag");
+                $item[$asset_tag][$batch_counter]['name'] = Helper::array_smart_fetch($row, "name");
+                $item[$asset_tag][$batch_counter]['email'] = Helper::array_smart_fetch($row, "email");
+
+                $asset = Asset::where('asset_tag','=',$asset_tag)->first();
+                $item[$asset_tag][$batch_counter]['asset_id'] = $asset->id;
+
+                $base_username = User::generateFormattedNameFromFullName(Setting::getSettings()->username_format,$item[$asset_tag][$batch_counter]['name']);
+                $user = User::where('username','=',$base_username['username']);
+                $user_query = ' on username '.$base_username['username'];
+
+                if ($request->input('match_firstnamelastname')=='1') {
+                    $firstnamedotlastname = User::generateFormattedNameFromFullName('firstname.lastname',$item[$asset_tag][$batch_counter]['name']);
+                    $item[$asset_tag][$batch_counter]['username'][] = $firstnamedotlastname['username'];
+                    $user->orWhere('username','=',$firstnamedotlastname['username']);
+                    $user_query .= ', or on username '.$firstnamedotlastname['username'];
+                }
+
+                if ($request->input('match_flastname')=='1') {
+                    $flastname = User::generateFormattedNameFromFullName('filastname',$item[$asset_tag][$batch_counter]['name']);
+                    $item[$asset_tag][$batch_counter]['username'][] = $flastname['username'];
+                    $user->orWhere('username','=',$flastname['username']);
+                    $user_query .= ', or on username '.$flastname['username'];
+                }
+                if ($request->input('match_firstname')=='1') {
+                    $firstname = User::generateFormattedNameFromFullName('firstname',$item[$asset_tag][$batch_counter]['name']);
+                    $item[$asset_tag][$batch_counter]['username'][] = $firstname['username'];
+                    $user->orWhere('username','=',$firstname['username']);
+                    $user_query .= ', or on username '.$firstname['username'];
+                }
+                if ($request->input('match_email')=='1') {
+                    if ($item[$asset_tag][$batch_counter]['email']=='') {
+                        $item[$asset_tag][$batch_counter]['username'][] = $user_email = User::generateEmailFromFullName($item[$asset_tag][$batch_counter]['name']);
+                        $user->orWhere('username','=',$user_email);
+                        $user_query .= ', or on username '.$user_email;
+                    }
+                }
+
+                // A matching user was found
+                if ($user = $user->first()) {
+                    $item[$asset_tag][$batch_counter]['checkedout_to'] = $user->id;
+
+                    $status['success'][] = 'Found user '.Helper::array_smart_fetch($row, "name").$user_query;
+
+                    if ($asset) {
+
+                        $item[$asset_tag][$batch_counter]['user_id'] = $user->id;
+
+                        Actionlog::firstOrCreate(array(
+                            'asset_id' => $asset->id,
+                            'asset_type' => 'hardware',
+                            'user_id' =>  Auth::user()->id,
+                            'note' => 'Checkout imported by '.Auth::user()->fullName().' from history importer',
+                            'checkedout_to' => $item[$asset_tag][$batch_counter]['user_id'],
+                            'created_at' =>  $item[$asset_tag][$batch_counter]['checkout_date'],
+                            'action_type'   => 'checkout'
+                            )
+                        );
+
+                        $asset->assigned_to = $user->id;
+                        $asset->save();
+
+                    } else {
+                        $status['error'][] = 'Asset does not exist so no checkin log was created.';
+                    }
+
+
+                } else {
+                    $item[$asset_tag][$batch_counter]['checkedout_to'] = null;
+                    $status['error'][] = 'No matching user for '.Helper::array_smart_fetch($row, "name");
+                }
+
+            }
+        }
+
+        // Loop through and backfill the checkins
+        foreach ($item as $key => $asset_batch) {
+            $total_in_batch = count($asset_batch);
+            for($x = 0; $x < $total_in_batch; $x++) {
+                $next = $x + 1;
+
+                // Only do this if a matching user was found
+                if ($asset_batch[$x]['checkedout_to']!='') {
+
+                    if (($total_in_batch > 1) && ($x < $total_in_batch) && (array_key_exists($next,$asset_batch))) {
+                        $checkin_date = Carbon::parse($asset_batch[$next]['checkout_date'])->subDay(1)->format('Y-m-d H:i:s');
+                        $asset_batch[$x]['real_checkin'] = $checkin_date;
+
+                        Actionlog::firstOrCreate(array(
+                                'asset_id' => $asset_batch[$x]['asset_id'],
+                                'asset_type' => 'hardware',
+                                'user_id' => Auth::user()->id,
+                                'note' => 'Checkin imported by ' . Auth::user()->fullName() . ' from history importer',
+                                'checkedout_to' => null,
+                                'created_at' => $checkin_date,
+                                'action_type' => 'checkin'
+                            )
+                        );
+                    }
+                }
+
+
+            }
+        }
+
+
+        return View::make('hardware/history')->with('status',$status);
     }
 
 
@@ -1547,11 +1715,11 @@ class AssetsController extends Controller
         $rows = array();
         foreach ($assets as $asset) {
             $inout = '';
-            $actions = '';
+            $actions = '<div style="white-space: nowrap;">';
             if ($asset->deleted_at=='') {
-		    if (Gate::allows('assets.create')) {
-                    $actions = '<div style=" white-space: nowrap;"><a href="' . route('clone/hardware',
-                            $asset->id) . '" class="btn btn-info btn-sm" title="Clone asset" data-toggle="tooltip"><i class="fa fa-clone"></i>';
+                if (Gate::allows('assets.create')) {
+                    $actions .= '<a href="' . route('clone/hardware',
+                            $asset->id) . '" class="btn btn-info btn-sm" title="Clone asset" data-toggle="tooltip"><i class="fa fa-clone"></i></a> ';
                 }
 	/*	else {
 			$actions = '<div style=" white-space: nowrap;"><a href="' . route('account/request-asset', $asset->id) . '"class="btn btn-info btn-sm" title="Request">Request</a>';
@@ -1559,32 +1727,35 @@ class AssetsController extends Controller
 		}*/
 
                 if (Gate::allows('assets.edit')) {
-                    $actions .= '</a> <a href="' . route('update/hardware',
+                    $actions .= '<a href="' . route('update/hardware',
                             $asset->id) . '" class="btn btn-warning btn-sm" title="Edit asset" data-toggle="tooltip"><i class="fa fa-pencil icon-white"></i></a> ';
                 }
                 if (Gate::allows('assets.delete')) {
                     $actions .= '<a data-html="false" class="btn delete-asset btn-danger btn-sm" data-toggle="modal" href="' . route('delete/hardware',
-                            $asset->id) . '" data-content="' . trans('admin/hardware/message.delete.confirm') . '" data-title="' . trans('general.delete') . ' ' . htmlspecialchars($asset->asset_tag) . '?" onClick="return false;"><i class="fa fa-trash icon-white"></i></a></div>';
+                            $asset->id) . '" data-content="' . trans('admin/hardware/message.delete.confirm') . '" data-title="' . trans('general.delete') . ' ' . htmlspecialchars($asset->asset_tag) . '?" onClick="return false;"><i class="fa fa-trash icon-white"></i></a>';
                 }
             } elseif ($asset->model->deleted_at=='') {
-                $actions = '<a href="'.route('restore/hardware', $asset->id).'" title="Restore asset" data-toggle="tooltip" class="btn btn-warning btn-sm"><i class="fa fa-recycle icon-white"></i></a>';
+                $actions .= '<a href="'.route('restore/hardware', $asset->id).'" title="Restore asset" data-toggle="tooltip" class="btn btn-warning btn-sm"><i class="fa fa-recycle icon-white"></i></a>';
             }
 
-            if ($asset->assetstatus) {
-                if (($asset->assetstatus->deployable != 0) && ($asset->deleted_at=='')) {
-                    if (($asset->assigned_to !='') && ($asset->assigned_to > 0)) {
-                        if (Gate::allows('assets.checkin')) {
-                            $inout = '<a href="' . route('checkin/hardware',
-                                    $asset->id) . '" class="btn btn-primary btn-sm" title="Checkin this asset" data-toggle="tooltip">' . trans('general.checkin') . '</a>';
-                        }
-                    } else {
-                        if (Gate::allows('assets.checkout')) {
-                            $inout = '<a href="' . route('checkout/hardware',
-                                    $asset->id) . '" class="btn btn-info btn-sm" title="Checkout this asset to a user" data-toggle="tooltip">' . trans('general.checkout') . '</a>';
-                        }
-                    }
+            $actions .= '</div>';
+
+            if (($asset->availableForCheckout()))
+            {
+                if (Gate::allows('assets.checkout')) {
+                    $inout = '<a href="' . route('checkout/hardware',
+                            $asset->id) . '" class="btn btn-info btn-sm" title="Checkout this asset to a user" data-toggle="tooltip">' . trans('general.checkout') . '</a>';
+                }
+
+            } else {
+                if (Gate::allows('assets.checkin')) {
+                    $inout = '<a href="' . route('checkin/hardware',
+                            $asset->id) . '" class="btn btn-primary btn-sm" title="Checkin this asset" data-toggle="tooltip">' . trans('general.checkin') . '</a>';
                 }
             }
+
+            $purchase_cost = Helper::formatCurrencyOutput($asset->purchase_cost);
+
             $row = array(
             'checkbox'      =>'<div class="text-center"><input type="checkbox" name="edit_asset['.$asset->id.']" class="one_required"></div>',
             'id'        => $asset->id,
@@ -1607,7 +1778,7 @@ class AssetsController extends Controller
 		'manufacturer'      => (($asset->model) && ($asset->model->manufacturer)) ? (string)link_to('/admin/settings/manufacturers/'.$asset->model->manufacturer->id.'/view', e($asset->model->manufacturer->name)) : '',
             'manufacturer_nolink' => $asset->model->manufacturer->name,
 	    'eol'           => ($asset->eol_date()) ? $asset->eol_date() : '',
-            'purchase_cost'           => ($asset->purchase_cost) ? number_format($asset->purchase_cost, 2) : '',
+            'purchase_cost'           => $purchase_cost,
             'purchase_date'           => ($asset->purchase_date) ? $asset->purchase_date : '',
             'notes'         => e($asset->notes),
             'order_number'  => ($asset->order_number!='') ? '<a href="'.config('app.url').'/hardware?order_number='.e($asset->order_number).'">'.e($asset->order_number).'</a>' : '',
@@ -1621,7 +1792,12 @@ class AssetsController extends Controller
 		'companyName'   => is_null($asset->company) ? '' : e($asset->company->name)
             );
             foreach ($all_custom_fields as $field) {
-                $row[$field->db_column_name()]=$asset->{$field->db_column_name()};
+                if (($field->format=='URL') && ($asset->{$field->db_column_name()}!='')) {
+                    $row[$field->db_column_name()] = '<a href="'.$asset->{$field->db_column_name()}.'" target="_blank">'.$asset->{$field->db_column_name()}.'</a>';
+                } else {
+                    $row[$field->db_column_name()] = e($asset->{$field->db_column_name()});
+                }
+
             }
             $rows[]=$row;
         }

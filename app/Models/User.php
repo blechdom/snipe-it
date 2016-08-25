@@ -315,6 +315,10 @@ class User extends Model implements AuthenticatableContract, CanResetPasswordCon
             ->orWhere('username', '=', $user_email);
     }
 
+    public static function generateEmailFromFullName($name) {
+        $username = User::generateFormattedNameFromFullName(Setting::getSettings()->email_format, $name);
+        return $username['username'].'@'.Setting::getSettings()->email_domain;
+    }
 
     public static function generateFormattedNameFromFullName($format = 'filastname', $users_name)
     {
@@ -346,8 +350,9 @@ class User extends Model implements AuthenticatableContract, CanResetPasswordCon
             } elseif ($format=='firstname') {
                 $email_last_name.=str_replace(' ', '', $last_name);
                 $email_prefix = $first_name;
-
             }
+
+
         }
 
         $user_username = $email_prefix;
