@@ -37,16 +37,16 @@
 
 @if (($require_acceptance==1) && ($eula!=''))
 
-	Please read the terms of use below, and click on the link at the bottom to confirm that you read and agree to the terms of use, and have received the asset.
-
+	<br><b>Please read the terms of use below. If you have not received the accessory or do not agree to the terms of use, please reply to this email.
+</b>
 @elseif (($require_acceptance==1) && ($eula==''))
 
-	Please click on the link at the bottom to confirm that you have received the accessory.
-
+<br><b>	If you have not received the accessory or do not agree to the terms of use, please reply to this email.
+</b>
 @elseif (($require_acceptance==0) && ($eula!=''))
 
-	Please read the terms of use below.
-
+<br><b>	Please read the terms of use below.
+</b>
 @endif
 
 </p>
@@ -54,7 +54,8 @@
 <p><blockquote>{!! $eula !!}</blockquote></p>
 
 @if ($require_acceptance==1)
-<p><strong><a href="{{ config('app.url') }}/account/accept-asset/{{ $log_id }}">I have read and agree to the terms of use, and have received this item.</a></strong></p>
+<!-- <p><strong><a href="{{ config('app.url') }}/account/accept-asset/{{ $log_id }}">I have read and agree to the terms of use, and have received this item.</a></strong></p>
+-->
 @endif
 
 <p>{{ \App\Models\Setting::getSettings()->site_name }}</p>

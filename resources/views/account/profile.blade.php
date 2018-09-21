@@ -70,7 +70,7 @@
         </div>
 
         <!-- Gravatar Email -->
-       <!-- <div class="form-group {{ $errors->has('gravatar') ? ' has-error' : '' }}">
+<!--        <div class="form-group {{ $errors->has('gravatar') ? ' has-error' : '' }}">
             <label for="gravatar" class="col-md-3 control-label">{{ trans('general.gravatar_email') }}
              <small>(Private)</small></label>
             <div class="col-md-5">
@@ -81,7 +81,7 @@
             </p>
             </div>
         </div>
-	-->
+-->	
 
       <!-- Avatar -->
         @if ($user->avatar)

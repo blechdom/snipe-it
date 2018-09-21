@@ -809,8 +809,8 @@ class LicensesController extends Controller
         ->with('supplier_list', $supplier_list)
         ->with('license', $license)
         ->with('maintained_list', $maintained_list)
-        ->with('company_list', $company_list);
-
+        ->with('company_list', $company_list)
+	->with('manufacturer_list', Helper::manufacturerList());
     }
 
 
@@ -1119,7 +1119,8 @@ class LicensesController extends Controller
     {
         $licenses = Company::scopeCompanyables(License::with('company'));
 	$licenses = $licenses->where('licenses.name', 'like', '%Training%')
-                        ->orWhere('licenses.name', 'like', '%Safety%');
+                        ->orWhere('licenses.name', 'like', '%Safety%')
+			->orWhere('licenses.name', 'like', '%Policy%');
 
 
         if (Input::has('search')) {
